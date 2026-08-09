@@ -1,0 +1,19 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.lotus_flower1.new": {
+			"animation_length": 10,
+			"bones": {
+				"bone": {
+					"relative_to": {
+						"rotation": "entity"
+					},
+					"rotation": {
+						"0.0": [0, 0, 0.01],
+						"10.0": [0, 750, 0]
+					}
+				}
+			}
+		}
+	}
+}

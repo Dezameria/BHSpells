@@ -1,0 +1,78 @@
+package net.offkung.bhspells.entity.spells.thousand_arrows;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
+import io.redspace.ironsspellbooks.entity.spells.AbstractMagicProjectile;
+import io.redspace.ironsspellbooks.render.RenderHelper;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+
+public class MagicArrowRenderer<T extends AbstractMagicProjectile> extends EntityRenderer<T> {
+    private final ResourceLocation texture;
+    private final float scale;
+
+    public MagicArrowRenderer(Context context, ResourceLocation texture) {
+        this(context, texture, 1.0F);
+    }
+
+    public MagicArrowRenderer(Context context, ResourceLocation texture, float scale) {
+        super(context);
+        this.texture = texture;
+        this.scale = scale;
+    }
+
+    @Override
+    public void render(T entity, float yaw, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int light) {
+        poseStack.pushPose();
+
+        Vec3 motion = entity.deltaMovementOld.add(entity.getDeltaMovement().subtract(entity.deltaMovementOld).scale(partialTicks));
+        float xRot = -((float) (Mth.atan2(motion.horizontalDistance(), motion.y) * (double) (180F / (float) Math.PI)) - 90.0F);
+        float yRot = -((float) (Mth.atan2(motion.z, motion.x) * (double) (180F / (float) Math.PI)) + 90.0F);
+        poseStack.mulPose(Axis.YP.rotationDegrees(yRot));
+        poseStack.mulPose(Axis.XP.rotationDegrees(xRot));
+
+        renderModel(poseStack, bufferSource, texture, scale);
+        poseStack.popPose();
+
+        super.render(entity, yaw, partialTicks, poseStack, bufferSource, light);
+    }
+
+    public static void renderModel(PoseStack poseStack, MultiBufferSource bufferSource, ResourceLocation texture, float scale) {
+        float baseScale = 0.05625F * scale;
+        poseStack.scale(baseScale, baseScale, baseScale);
+
+        PoseStack.Pose pose = poseStack.last();
+        Matrix4f poseMatrix = pose.pose();
+        Matrix3f normalMatrix = pose.normal();
+
+        VertexConsumer consumer = bufferSource.getBuffer(RenderHelper.CustomerRenderType.magic(texture));
+        poseStack.mulPose(Axis.YP.rotationDegrees(90.0F));
+        poseStack.translate(-2, 0, 0);
+
+        for (int j = 0; j < 4; ++j) {
+            poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
+            vertex(poseMatrix, normalMatrix, consumer, -8, -2, 0, 0.0F, 0.0F, 0, 1, 0, LightTexture.FULL_BRIGHT);
+            vertex(poseMatrix, normalMatrix, consumer, 8, -2, 0, 0.5F, 0.0F, 0, 1, 0, LightTexture.FULL_BRIGHT);
+            vertex(poseMatrix, normalMatrix, consumer, 8, 2, 0, 0.5F, 0.15625F, 0, 1, 0, LightTexture.FULL_BRIGHT);
+            vertex(poseMatrix, normalMatrix, consumer, -8, 2, 0, 0.0F, 0.15625F, 0, 1, 0, LightTexture.FULL_BRIGHT);
+        }
+    }
+
+    public static void vertex(Matrix4f pMatrix, Matrix3f pNormals, VertexConsumer pVertexBuilder, int pOffsetX, int pOffsetY, int pOffsetZ, float pTextureX, float pTextureY, int pNormalX, int p_113835_, int p_113836_, int pPackedLight) {
+        pVertexBuilder.vertex(pMatrix, (float) pOffsetX, (float) pOffsetY, (float) pOffsetZ).color(200, 200, 200, 255).uv(pTextureX, pTextureY).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(pPackedLight).normal((float) pNormalX, (float) p_113836_, (float) p_113835_).endVertex();
+    }
+
+    @Override
+    public ResourceLocation getTextureLocation(T entity) {
+        return texture;
+    }
+}

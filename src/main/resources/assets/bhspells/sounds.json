@@ -1,0 +1,37 @@
+{
+  "water_bubble": {
+    "sounds": [
+      "bhspells:water_bubble"
+    ]
+  },
+  "break_large": {
+    "sounds": [
+      "bhspells:break_large"
+    ]
+  },
+  "hit_medium_2": {
+    "sounds": [
+      "bhspells:hit_medium_2"
+    ]
+  },
+  "small_rock_hit": {
+    "sounds": [
+      "bhspells:small_rock_hit"
+    ]
+  },
+  "rumble_1": {
+    "sounds": [
+      "bhspells:rumble_1"
+    ]
+  },
+  "sword_impact": {
+    "sounds": [
+      "bhspells:sword_impact"
+    ]
+  },
+  "iron_parry": {
+    "sounds": [
+      "bhspells:iron_parry"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "bhspells:water_spell_bypass",
+    "bhspells:fire_spell_bypass",
+    "bhspells:gold_spell_bypass",
+    "bhspells:grass_spell_bypass",
+    "bhspells:ground_spell_bypass"
+  ]
+}

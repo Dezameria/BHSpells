@@ -1,0 +1,49 @@
+{
+  "effect.bhspells.screen_shake": "Screen Shake",
+  "effect.bhspells.check_cast": "Casting?",
+  "effect.bhspells.perplexity": "Perplexity",
+  "effect.bhspells.petal_waltz": "Perplexity",
+
+  "death.attack.water_spell": "%1$s was obliterated by water magic",
+  "death.attack.water_spell.player": "%1$s was obliterated by water magic whilst fighting %2$s",
+
+  "death.attack.water_magic": "%1$s was obliterated by water magic",
+  "death.attack.water_magic.player": "%1$s was obliterated by water magic whilst fighting %2$s",
+
+  "death.attack.fire_spell": "%1$s was incinerated by fire magic",
+  "death.attack.fire_spell.player": "%1$s was incinerated by fire magic whilst fighting %2$s",
+
+  "death.attack.gold_spell": "%1$s was struck down by gold magic",
+  "death.attack.gold_spell.player": "%1$s was struck down by gold magic whilst fighting %2$s",
+
+  "death.attack.gold_magic": "%1$s was struck down by gold magic",
+  "death.attack.gold_magic.player": "%1$s was struck down by gold magic whilst fighting %2$s",
+
+  "death.attack.grass_spell": "%1$s was consumed by nature magic",
+  "death.attack.grass_spell.player": "%1$s was consumed by nature magic whilst fighting %2$s",
+
+  "death.attack.ground_spell": "%1$s was crushed by earth magic",
+  "death.attack.ground_spell.player": "%1$s was crushed by earth magic whilst fighting %2$s",
+
+  "death.attack.ground_magic": "%1$s was crushed by earth magic",
+  "death.attack.ground_magic.player": "%1$s was crushed by earth magic whilst fighting %2$s",
+
+  "school.bhspells.gold": "Gold",
+  "school.bhspells.ground": "Ground",
+
+  "spell.bhspells.stone_crumble": "Stone Crumble",
+  "spell.bhspells.feet_stomp": "Feet Stomp",
+  "spell.bhspells.explosive_lily": "Explosive Lily",
+  "spell.bhspells.ultrashock": "Ultrashock",
+  "spell.bhspells.healing_lily": "Healing Lily",
+  "spell.bhspells.eternal_purification": "Eternal Purification",
+  "spell.bhspells.purple_wave": "Purple Wave",
+  "spell.bhspells.thousand_arrows": "Thousand Arrows",
+  "spell.bhspells.six_petal_waltz": "Six-Petal Waltz",
+  "spell.bhspells.fiery_dance": "Fiery Dance",
+
+  "attribute.bhspells.gold_magic_resist": "Gold Magic Resistance",
+  "attribute.bhspells.gold_spell_power": "Gold Spell Power",
+  "attribute.bhspells.ground_magic_resist": "Ground Magic Resistance",
+  "attribute.bhspells.ground_spell_power": "Ground Spell Power"
+}
