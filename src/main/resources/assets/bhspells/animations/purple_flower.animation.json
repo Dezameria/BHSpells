@@ -1,0 +1,20 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.purple_flower.new": {
+			"loop": true,
+			"animation_length": 10,
+			"bones": {
+				"bone": {
+					"relative_to": {
+						"rotation": "entity"
+					},
+					"rotation": {
+						"0.0": [0, 0, 0.01],
+						"10.0": [0, 750, 0]
+					}
+				}
+			}
+		}
+	}
+}
