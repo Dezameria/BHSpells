@@ -2,15 +2,18 @@ package net.offkung.bhspells.entity.spells.six_petal_waltz;
 
 import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.capabilities.magic.MagicManager;
+import io.redspace.ironsspellbooks.damage.DamageSources;
 import io.redspace.ironsspellbooks.entity.spells.AbstractMagicProjectile;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.DustColorTransitionOptions;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -24,6 +27,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.offkung.bhspells.registry.BHSpellRegistry;
 import net.offkung.bhspells.registry.EntityRegistry;
 import org.joml.Vector3f;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -43,6 +47,8 @@ public class PetalWaltzSword extends AbstractMagicProjectile implements GeoEntit
     private static final int RETURN_TIMEOUT_MAX = 60;
     private static final double RETURN_SPEED = 2.2;
     private static final double RETURN_ARRIVAL_DISTANCE_SQR = 1.0;
+    private static final float RETURN_HIT_INFLATION = 2.0f;
+    private float damage = 20.0f;
 
     private int waitTimer = -1;
     private LivingEntity owner;
@@ -126,19 +132,72 @@ public class PetalWaltzSword extends AbstractMagicProjectile implements GeoEntit
 
     @Override
     protected boolean canHitEntity(Entity pTarget) {
-        return false;
+        if (this.entityData.get(DATA_ACTIVATED)) {
+            return false;
+        }
+        if (this.waitTimer > 0 && this.waitTimer <= 410) {
+            return false;
+        }
+        if (pTarget == this.owner) {
+            return false;
+        }
+        return super.canHitEntity(pTarget);
     }
 
     @Override
     protected void onHitBlock(BlockHitResult pResult) {
+        if (this.level().isClientSide) return;
+        if (this.entityData.get(DATA_ACTIVATED) || this.entityData.get(DATA_RETURNING)) return;
+
+        Direction hitDirection = pResult.getDirection();
+        Vec3 hitPos = pResult.getLocation();
+        Vec3 pullBack = new Vec3(hitDirection.getStepX(), hitDirection.getStepY(), hitDirection.getStepZ()).scale(0.1);
+        Vec3 stopPos = hitPos.add(pullBack);
+
+        this.setPos(stopPos.x, stopPos.y, stopPos.z);
+        this.setDeltaMovement(Vec3.ZERO);
+
+        if (this.waitTimer < 0 || this.waitTimer > 410) {
+            this.waitTimer = 410;
+        }
+
+        impactParticles(stopPos.x, stopPos.y, stopPos.z);
+    }
+
+    @Override
+    public float getHitDetectionInflation() {
+        if (this.entityData.get(DATA_RETURNING)) {
+            return RETURN_HIT_INFLATION;
+        }
+        return super.getHitDetectionInflation();
+    }
+
+    public void setDamage(float damage) {
+        this.damage = damage;
     }
 
     @Override
     protected void onHitEntity(EntityHitResult pResult) {
+        if (this.level().isClientSide) return;
+
+        Entity hitEntity = pResult.getEntity();
+        if (!(hitEntity instanceof LivingEntity livingTarget)) return;
+        if (livingTarget == this.owner) return;
+        if (!(this.owner instanceof ServerPlayer serverPlayer)) return;
+
+        DamageSources.applyDamage(livingTarget, this.damage, BHSpellRegistry.SIX_PETAL_WALTZ.get().getDamageSource(serverPlayer));
+        impactParticles(pResult.getLocation().x, pResult.getLocation().y, pResult.getLocation().z);
     }
 
     @Override
     protected void onHit(HitResult hitResult) {
+        if (this.level().isClientSide) return;
+
+        if (hitResult.getType() == HitResult.Type.ENTITY) {
+            onHitEntity((EntityHitResult) hitResult);
+        } else if (hitResult.getType() == HitResult.Type.BLOCK) {
+            onHitBlock((BlockHitResult) hitResult);
+        }
     }
 
     @Override

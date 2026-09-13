@@ -15,6 +15,8 @@ public class MagicAlchemyRenderer extends GeoEntityRenderer<MagicAlchemyEntity> 
     public MagicAlchemyRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new MagicAlchemyModel());
         this.shadowRadius = 0.0F;
+        this.scaleWidth = 2.5F;
+        this.scaleHeight = 2.5F;
     }
 
     public ResourceLocation getTextureLocation(MagicAlchemyEntity animatable) {

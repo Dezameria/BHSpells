@@ -1,11 +1,15 @@
 package net.offkung.bhspells.client.event;
 
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.offkung.bhspells.BHSpells;
 
 import java.util.Random;
 
+@Mod.EventBusSubscriber(modid = BHSpells.MODID, value = Dist.CLIENT)
 public class ClientScreenShakeEvent {
     private static final Random random = new Random();
     private static float shakeIntensity = 0.0F;

@@ -7,20 +7,28 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.LivingKnockBackEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.offkung.bhspells.entity.spells.fiery_dance.GoldenMarbleEntity;
 import net.offkung.bhspells.registry.BHSoundRegistry;
 
+import java.lang.ref.WeakReference;
 import java.util.*;
 
+@Mod.EventBusSubscriber
 public class GoldenMarbleManager {
     private static final float BASE_ANGULAR_SPEED = 0.15f;
     private static final float BOOSTED_SPEED_MULTIPLIER = 4.5f;
     private static final int BOOST_DURATION_TICKS = 100;
     private static final double REFLECT_CHANCE = 0.40;
+    private static final UUID KNOCKBACK_IMMUNITY_ID = UUID.fromString("b89d4d93-1b96-4db1-9878-7bf3c7e4620f");
 
     private static final Map<UUID, MarbleGroup> ACTIVE_GROUPS = new HashMap<>();
 
@@ -29,10 +37,12 @@ public class GoldenMarbleManager {
 
     public static void registerGroup(LivingEntity owner, List<GoldenMarbleEntity> marbles) {
         MarbleGroup group = new MarbleGroup();
+        group.ownerRef = new WeakReference<>(owner);
         for (GoldenMarbleEntity marble : marbles) {
             group.marbleIds.add(marble.getId());
         }
         ACTIVE_GROUPS.put(owner.getUUID(), group);
+        applyKnockbackImmunity(owner);
     }
 
     public static void onMarbleRemoved(UUID ownerId, int marbleId) {
@@ -40,12 +50,23 @@ public class GoldenMarbleManager {
         if (group == null) return;
         group.marbleIds.remove(Integer.valueOf(marbleId));
         if (group.marbleIds.isEmpty()) {
+            if (group.ownerRef != null) {
+                removeKnockbackImmunity(group.ownerRef.get());
+            }
             ACTIVE_GROUPS.remove(ownerId);
         }
     }
 
     public static boolean hasActiveGroup(UUID ownerId) {
         return ACTIVE_GROUPS.containsKey(ownerId);
+    }
+
+    public static boolean isActive(LivingEntity entity) {
+        return entity != null && hasActiveGroup(entity.getUUID());
+    }
+
+    public static boolean isActive(UUID ownerId) {
+        return hasActiveGroup(ownerId);
     }
 
     public static float getSpeedMultiplier(UUID ownerId) {
@@ -55,6 +76,34 @@ public class GoldenMarbleManager {
 
     public static float getBaseAngularSpeed() {
         return BASE_ANGULAR_SPEED;
+    }
+
+    private static void applyKnockbackImmunity(LivingEntity caster) {
+        if (caster == null) {
+            return;
+        }
+        AttributeInstance attribute = caster.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
+        if (attribute == null || attribute.getModifier(KNOCKBACK_IMMUNITY_ID) != null) {
+            return;
+        }
+
+        attribute.addTransientModifier(new AttributeModifier(KNOCKBACK_IMMUNITY_ID, "Golden Marble knockback immunity", 1.0, AttributeModifier.Operation.ADDITION));
+    }
+
+    private static void removeKnockbackImmunity(LivingEntity caster) {
+        if (caster == null) return;
+        AttributeInstance attribute = caster.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
+        if (attribute == null) return;
+
+        attribute.removeModifier(KNOCKBACK_IMMUNITY_ID);
+    }
+
+    @SubscribeEvent
+    public static void onLivingKnockBack(LivingKnockBackEvent event) {
+        LivingEntity target = event.getEntity();
+        if (target != null && hasActiveGroup(target.getUUID())) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
@@ -80,7 +129,7 @@ public class GoldenMarbleManager {
 
         boolean reflectSuccess = target.level().getRandom().nextDouble() < REFLECT_CHANCE;
         if (!reflectSuccess) {
-            event.setAmount(event.getAmount() * 0.5f);
+            event.setAmount(event.getAmount() * 0.3f);
             return;
         }
 
@@ -132,6 +181,7 @@ public class GoldenMarbleManager {
 
     private static class MarbleGroup {
         final List<Integer> marbleIds = new ArrayList<>();
+        WeakReference<LivingEntity> ownerRef;
         float speedMultiplier = 1.0f;
         int boostTicksRemaining = 0;
     }

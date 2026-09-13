@@ -3,14 +3,18 @@ package net.offkung.bhspells.client.event;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.offkung.bhspells.BHSpells;
 import net.offkung.bhspells.entity.spells.six_petal_waltz.PetalWaltzSword;
 import net.offkung.bhspells.network.PacketHandler;
 import net.offkung.bhspells.network.client.SwordDashPacket;
 
+@Mod.EventBusSubscriber(modid = BHSpells.MODID, value = Dist.CLIENT)
 public class SwordDashClientHandler {
-    private static final double MAX_RANGE = 100.0;
+    private static final double MAX_RANGE = 200.0;
     private static final double RAY_TOLERANCE_SQR = 2.25;
 
     @SubscribeEvent
@@ -20,6 +24,16 @@ public class SwordDashClientHandler {
 
     @SubscribeEvent
     public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        tryTriggerDash(event.getEntity());
+    }
+
+    @SubscribeEvent
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        tryTriggerDash(event.getEntity());
+    }
+
+    @SubscribeEvent
+    public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
         tryTriggerDash(event.getEntity());
     }
 

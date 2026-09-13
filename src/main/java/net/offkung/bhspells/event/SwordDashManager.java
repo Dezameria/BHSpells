@@ -13,20 +13,23 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.offkung.bhspells.entity.spells.six_petal_waltz.PetalWaltzSword;
 import net.offkung.bhspells.registry.BHSpellRegistry;
 import net.offkung.bhspells.registry.MobEffectsRegistry;
 import net.offkung.bhspells.registry.ParticleRegistry;
+import yesman.epicfight.particle.EpicFightParticles;
 
 import java.util.*;
 
+@Mod.EventBusSubscriber
 public class SwordDashManager {
     private static final Map<UUID, DashData> ACTIVE_DASHES = new HashMap<>();
     private static final Map<UUID, SwordTracker> SWORD_TRACKERS = new HashMap<>();
 
-    private static final double DASH_SPEED = 2.8;
+    private static final double DASH_SPEED = 7.8;
     private static final double ARRIVAL_DISTANCE_SQR = 2.25;
-    private static final double HIT_RADIUS = 1.5;
+    private static final double HIT_RADIUS = 5.55;
     private static final int DASH_TIMEOUT_TICKS = 40;
     private static final float DASH_DAMAGE = 20.0f;
 
@@ -64,23 +67,33 @@ public class SwordDashManager {
         boolean timedOut = data.timeoutTicks > DASH_TIMEOUT_TICKS;
 
         if (!arrived && !timedOut) {
-            Vec3 dashMotion = toTarget.normalize().scale(DASH_SPEED);
-            serverPlayer.setDeltaMovement(dashMotion.x, Math.max(dashMotion.y, serverPlayer.getDeltaMovement().y * 0.5), dashMotion.z);
+            Vec3 dashDir = toTarget.normalize();
+            Vec3 currentMotion = serverPlayer.getDeltaMovement();
+
+            Vec3 desiredMotion = dashDir.scale(DASH_SPEED);
+            Vec3 blendedMotion = currentMotion.add(desiredMotion.subtract(currentMotion).scale(0.5));
+
+            serverPlayer.setDeltaMovement(blendedMotion.x, Math.max(blendedMotion.y, currentMotion.y * 0.5), blendedMotion.z);
             serverPlayer.fallDistance = 0;
             serverPlayer.hurtMarked = true;
 
-            spawnDashCloudTrail(serverPlayer, dashMotion);
+            spawnDashCloudTrail(serverPlayer, blendedMotion);
 
             AABB hitBox = serverPlayer.getBoundingBox().inflate(HIT_RADIUS);
             for (Entity entity : level.getEntities(serverPlayer, hitBox)) {
                 if (entity instanceof LivingEntity livingEntity && entity != serverPlayer && !data.hitEntities.contains(entity.getUUID())) {
                     data.hitEntities.add(entity.getUUID());
                     spawnHorizontalCherry((ServerLevel) level, livingEntity.position(), 36, 0.4);
+                    ((ServerLevel) level).sendParticles(EpicFightParticles.BLADE_RUSH_SKILL.get(), livingEntity.position().x, livingEntity.position().y, livingEntity.position().z, 1, 0.0, 1.0, 0.0, 0.0);
                     DamageSources.applyDamage(livingEntity, DASH_DAMAGE, BHSpellRegistry.SIX_PETAL_WALTZ.get().getDamageSource(serverPlayer));
                 }
             }
         } else {
             ACTIVE_DASHES.remove(serverPlayer.getUUID());
+
+            serverPlayer.setDeltaMovement(Vec3.ZERO);
+            serverPlayer.hurtMarked = true;
+
             if (level.getEntity(data.swordEntityId) instanceof PetalWaltzSword sword) {
                 sword.discardFromDash();
             }

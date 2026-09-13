@@ -136,7 +136,7 @@ public class ThousandArrowsSpell extends AbstractSpell {
 
     @Override
     public SpellDamageSource getDamageSource(Entity projectile, Entity attacker) {
-        return super.getDamageSource(projectile, attacker).setIFrames(0);
+        return super.getDamageSource(projectile, attacker);
     }
 
     @Override

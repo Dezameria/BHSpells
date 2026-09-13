@@ -11,6 +11,8 @@ import io.redspace.ironsspellbooks.entity.spells.target_area.TargetedAreaEntity;
 import io.redspace.ironsspellbooks.particle.BlastwaveParticleOptions;
 import io.redspace.ironsspellbooks.registries.SoundRegistry;
 import io.redspace.ironsspellbooks.util.ParticleHelper;
+import mod.chloeprime.aaaparticles.api.common.AAALevel;
+import mod.chloeprime.aaaparticles.api.common.ParticleEmitterInfo;
 import net.minecraft.core.particles.DustColorTransitionOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -24,6 +26,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -34,8 +37,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.offkung.bhspells.BHSpells;
+import net.offkung.bhspells.client.particle.BlinkLeafParticleOptions;
 import net.offkung.bhspells.client.particle.ColoredEndRodParticleOption;
 import net.offkung.bhspells.client.particle.GreenCatParticleOption;
+import net.offkung.bhspells.event.PoisonSwirlManager;
 import net.offkung.bhspells.registry.BHSpellRegistry;
 import net.offkung.bhspells.registry.EntityRegistry;
 import net.offkung.bhspells.registry.MobEffectsRegistry;
@@ -64,6 +70,7 @@ public class ExplosiveLilyBall extends AbstractMagicProjectile {
 
     private static final EntityDataAccessor<Boolean> ATTACHED = SynchedEntityData.defineId(ExplosiveLilyBall.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> HEALING_MODE = SynchedEntityData.defineId(ExplosiveLilyBall.class, EntityDataSerializers.BOOLEAN);
+    private static final ParticleEmitterInfo GREEN_RECOVER = new ParticleEmitterInfo(BHSpells.id("green_recover"));
 
     private UUID targetUUID;
     private Entity cachedTarget;
@@ -226,6 +233,10 @@ public class ExplosiveLilyBall extends AbstractMagicProjectile {
             int secondsLeft = (attachDuration - attachTicks) / 20;
             if (attachTicks % 20 == 0 && secondsLeft > 0 && secondsLeft <= 3) {
                 notifyCaster(secondsLeft);
+                if (!isHealing() && targetPos != null) {
+                    BlinkLeafParticleOptions redBlink = new BlinkLeafParticleOptions(1.0F, 0.0F, 0.0F, 10, 5);
+                    MagicManager.spawnParticles(level(), redBlink, targetPos.x, targetPos.y, targetPos.z, 15, 0.3, 0.3, 0.3, 0.05, false);
+                }
             }
 
             if (attachTicks >= attachDuration) {
@@ -274,6 +285,8 @@ public class ExplosiveLilyBall extends AbstractMagicProjectile {
         if (!level().isClientSide) {
             Vec3 pos = position();
             MagicManager.spawnParticles(level(), ParticleRegistry.OAK_LEAF_PARTICLE.get(), pos.x, pos.y, pos.z, 30, 0.4, 0.4, 0.4, 0.05, false);
+            BlinkLeafParticleOptions whiteBlink = new BlinkLeafParticleOptions(1.0F, 1.0F, 1.0F, 20, 5);
+            MagicManager.spawnParticles(level(), whiteBlink, pos.x, pos.y, pos.z, 15, 0.3, 0.3, 0.3, 0.05, false);
         }
     }
 
@@ -295,13 +308,14 @@ public class ExplosiveLilyBall extends AbstractMagicProjectile {
         if (getOwner() instanceof ServerPlayer serverPlayer) {
             String verb = isHealing() ? "§aเบ่งบาน§r" : "§cระเบิด§r";
             serverPlayer.displayClientMessage(Component.literal("ใบบัวจะระเบิด " + verb + " ใน " + secondsLeft + "..."), true);
+            serverPlayer.playNotifySound(SoundEvents.UI_BUTTON_CLICK.get(), SoundSource.MASTER, 0.6F, 2.0F);
         }
     }
 
     private void healEntity(LivingEntity entity, float amount) {
         entity.heal(amount);
         Vec3 pos = entity.position().add(0, entity.getBbHeight() * 0.5, 0);
-        MagicManager.spawnParticles(level(), ParticleTypes.COMPOSTER, pos.x, pos.y, pos.z, 50, 1, 1, 1, 0.5, false);
+        AAALevel.addParticle(this.level(), 64.0, GREEN_RECOVER.clone().position(pos.x, pos.y - 0.5, pos.z));
         level().playSound(null, pos.x, pos.y, pos.z, SoundEvents.CONDUIT_ACTIVATE, SoundSource.NEUTRAL, 1, 1);
     }
 
@@ -324,7 +338,7 @@ public class ExplosiveLilyBall extends AbstractMagicProjectile {
                     MagicManager.spawnParticles(level(), ParticleRegistry.GREEN_CROSS_PARTICLE.get(), entity.position().x, entity.position().y, entity.position().z, 30, 0,0, 0, 0.3f, false);
 
                     TargetedAreaEntity visualEntity = TargetedAreaEntity.createTargetAreaEntity(level(), entity.position(), 2, 0x85FF9E);
-                    visualEntity.setDuration(5);
+                    visualEntity.setDuration(60);
                     visualEntity.setOwner(entity);
                     visualEntity.setShouldFade(true);
                     level().addFreshEntity(visualEntity);
@@ -341,6 +355,9 @@ public class ExplosiveLilyBall extends AbstractMagicProjectile {
                         float distance = (float) center.distanceTo(entity.position());
                         if (distance > radius) continue;
                         DamageSources.applyDamage(entity, explosionDamage, damageSource);
+                        entity.addEffect(new MobEffectInstance(MobEffects.POISON, 400, 4, false, false));
+                        entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 1, false, false));
+                        PoisonSwirlManager.register(entity);
                         MagicManager.spawnParticles(level(), ParticleRegistry.OAK_LEAF_PARTICLE.get(), entity.position().x, entity.position().y, entity.position().z, 60, 0.0, 0.0, 0.0, 0.2, false);
                         DustColorTransitionOptions greenDust = new DustColorTransitionOptions(new Vector3f(0.52f, 1f, 0.62f), new Vector3f(0.97f, 0.96f, 0.55f), 4f);
                         MagicManager.spawnParticles(level(), greenDust, entity.position().x, entity.position().y + 1, entity.position().z, 60, 0,0, 0, 0.25f, false);

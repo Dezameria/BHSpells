@@ -3,7 +3,6 @@ package net.offkung.bhspells.entity.spells.thousand_arrows;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
-import io.redspace.ironsspellbooks.IronsSpellbooks;
 import io.redspace.ironsspellbooks.entity.spells.AbstractMagicProjectile;
 import io.redspace.ironsspellbooks.render.RenderHelper;
 import net.minecraft.client.renderer.LightTexture;
@@ -14,11 +13,12 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import net.offkung.bhspells.BHSpells;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 public class MagicCastingArrowRenderer extends EntityRenderer<AbstractMagicProjectile> {
-    private static final ResourceLocation TEXTURE = IronsSpellbooks.id("textures/entity/small_magic_arrow.png");
+    private static final ResourceLocation TEXTURE = BHSpells.id("textures/entity/magic_arrow/small_magic_arrow.png");
 
     public MagicCastingArrowRenderer(EntityRendererProvider.Context context) {
         super(context);

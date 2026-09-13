@@ -5,6 +5,7 @@ import io.redspace.ironsspellbooks.api.attribute.MagicPercentAttribute;
 import io.redspace.ironsspellbooks.api.attribute.MagicRangedAttribute;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -12,6 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 import net.offkung.bhspells.BHSpells;
+import net.offkung.bhspells.entity.spells.golden_cloud.GoldenCloudEntity;
 
 @Mod.EventBusSubscriber(modid = BHSpells.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class AttributeRegistry {
@@ -38,5 +40,10 @@ public class AttributeRegistry {
 
     private static RegistryObject<Attribute> newPowerAttribute(String id) {
         return ATTRIBUTES.register(id + "_spell_power", () -> (new MagicPercentAttribute("attribute.bhspells." + id + "_spell_power", 1.0D, -100, 100).setSyncable(true)));
+    }
+
+    @SubscribeEvent
+    public static void onAttributeCreate(EntityAttributeCreationEvent event) {
+        event.put(EntityRegistry.GOLDEN_CLOUD.get(), GoldenCloudEntity.createAttributes().build());
     }
 }

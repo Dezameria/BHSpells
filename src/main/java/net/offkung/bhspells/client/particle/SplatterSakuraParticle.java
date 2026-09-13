@@ -70,9 +70,9 @@ public class SplatterSakuraParticle extends TextureSheetParticle {
 
         public Particle createParticle(@NotNull SimpleParticleType pType, ClientLevel pLevel, double pX, double pY, double pZ, double pXSpeed, double pYSpeed, double pZSpeed) {
             RandomSource random = pLevel.random;
-            double dx = (random.nextDouble() - (double)0.5F) * 0.003;
-            double dy = (random.nextDouble() - 0.4) * 0.002;
-            double dz = (random.nextDouble() - (double)0.5F) * 0.003;
+            double dx = (pXSpeed != 0.0) ? pXSpeed : (random.nextDouble() - (double)0.5F) * 0.003;
+            double dy = (pYSpeed != 0.0) ? pYSpeed : (random.nextDouble() - 0.4) * 0.002;
+            double dz = (pZSpeed != 0.0) ? pZSpeed : (random.nextDouble() - (double)0.5F) * 0.003;
             SplatterSakuraParticle particle = new SplatterSakuraParticle(pLevel, this.sprite, pX, pY, pZ, dx, dy, dz);
             particle.pulseSpeed = random.nextFloat() * 0.12F + 0.06F;
             return particle;

@@ -33,5 +33,15 @@
     "sounds": [
       "bhspells:iron_parry"
     ]
+  },
+  "fire_impact_spell": {
+    "sounds": [
+      "bhspells:fire_impact_spell"
+    ]
+  },
+  "ground_breaking": {
+    "sounds": [
+      "bhspells:ground_breaking"
+    ]
   }
 }

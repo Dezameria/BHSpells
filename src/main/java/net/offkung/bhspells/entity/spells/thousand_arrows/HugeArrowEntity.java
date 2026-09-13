@@ -1,14 +1,18 @@
 package net.offkung.bhspells.entity.spells.thousand_arrows;
 
+import com.gametechbc.traveloptics.entity.misc.TOScreenShakeEntity;
 import com.github.L_Ender.cataclysm.init.ModEffect;
+import io.redspace.ironsspellbooks.api.entity.NoKnockbackProjectile;
 import io.redspace.ironsspellbooks.api.registry.SpellRegistry;
 import io.redspace.ironsspellbooks.capabilities.magic.MagicManager;
 import io.redspace.ironsspellbooks.damage.DamageSources;
+import io.redspace.ironsspellbooks.damage.SpellDamageSource;
 import io.redspace.ironsspellbooks.entity.spells.AbstractMagicProjectile;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -29,7 +33,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-public class HugeArrowEntity extends AbstractMagicProjectile {
+public class HugeArrowEntity extends AbstractMagicProjectile implements NoKnockbackProjectile {
     private boolean landed = false;
     private int landedTicks = 0;
     private float landedYRot;
@@ -60,6 +64,18 @@ public class HugeArrowEntity extends AbstractMagicProjectile {
             case 3 -> 60.0f;
             default -> 0.0f;
         };
+    }
+
+    @Override
+    protected boolean canHitEntity(Entity pTarget) {
+        Entity owner = getOwner();
+        if (pTarget == owner) {
+            return false;
+        }
+        if (owner != null && owner.isPassengerOfSameVehicle(pTarget)) {
+            return false;
+        }
+        return pTarget.canBeHitByProjectile() && !pTarget.isSpectator();
     }
 
     @Override
@@ -105,7 +121,12 @@ public class HugeArrowEntity extends AbstractMagicProjectile {
         spawnImpactEffects(pos);
 
         LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
-        LevelUtil.circleSlamFracture(owner, level(), pos, 4.0, false, false, false);
+        // Nudge below pos: a block-top hit location has an exact integer Y, which makes
+        // LevelUtil.circleSlamFracture's internal flooring resolve to the air block above
+        // the ground instead of the ground itself, silently no-oping the fracture.
+        Vec3 fractureCenter = new Vec3(pos.x, pos.y - 0.1, pos.z);
+        LevelUtil.circleSlamFracture(owner, level(), fractureCenter, 6.0, false, false, false);
+        TOScreenShakeEntity.createScreenShake(this.level(), pos, 12.0F, 0.07F, 10, 0, 5, true);
 
         this.landedYRot = this.getYRot();
         this.landedXRot = this.getXRot();
@@ -126,7 +147,7 @@ public class HugeArrowEntity extends AbstractMagicProjectile {
     }
 
     private void applyAoeDamage(Vec3 pos) {
-        float radius = 4.0f;
+        float radius = 12.0f;
         float radiusSqr = radius * radius;
         LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
 
@@ -134,8 +155,15 @@ public class HugeArrowEntity extends AbstractMagicProjectile {
             if (entity != owner && entity instanceof LivingEntity livingEntity && entity.distanceToSqr(pos) <= radiusSqr) {
                 int stackCount = targetStacks.getOrDefault(entity.getUUID(), 0);
                 if (stackCount > 0) {
+                    DamageSources.ignoreNextKnockback(livingEntity);
                     float dmg = getDamageForStacks(stackCount);
-                    DamageSources.applyDamage(entity, dmg, BHSpellRegistry.THOUSAND_ARROWS.get().getDamageSource(this, owner));
+                    DamageSource damageSource;
+                    if (owner != null && (owner.isAlliedTo(entity) || entity.isAlliedTo(owner) || DamageSources.isFriendlyFireBetween(owner, entity))) {
+                        damageSource = SpellDamageSource.source(this, this, BHSpellRegistry.THOUSAND_ARROWS.get()).setIFrames(0);
+                    } else {
+                        damageSource = BHSpellRegistry.THOUSAND_ARROWS.get().getDamageSource(this, owner).setIFrames(0);
+                    }
+                    DamageSources.applyDamage(entity, dmg, damageSource);
                     if (stackCount >= 3) {
                         livingEntity.addEffect(new MobEffectInstance(ModEffect.EFFECTSTUN.get(), 60, 0, false, true, true));
                     }
@@ -145,7 +173,7 @@ public class HugeArrowEntity extends AbstractMagicProjectile {
     }
 
     private void spawnImpactEffects(Vec3 pos) {
-        MagicManager.spawnParticles(level(), ParticleTypes.EXPLOSION_EMITTER, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0, false);
+        MagicManager.spawnParticles(level(), ParticleTypes.EXPLOSION_EMITTER, pos.x, pos.y, pos.z, 10, 6, 0, 6, 0, false);
         MagicManager.spawnParticles(level(), ParticleTypes.GLOW, pos.x, pos.y, pos.z, 60, 1.0, 1.0, 1.0, 0.1, false);
         level().playSound(null, pos.x, pos.y, pos.z, SoundEvents.GENERIC_EXPLODE, SoundSource.NEUTRAL, 4.0f, 0.8f);
     }

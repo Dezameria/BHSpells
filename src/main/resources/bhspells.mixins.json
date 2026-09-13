@@ -5,8 +5,20 @@
   "package": "net.offkung.bhspells.mixin",
   "refmap": "bhspells.refmap.json",
   "mixins": [
+    "LivingEntityAccessor",
+    "LivingEntityMixin",
+    "LiquidBlockMixin",
+    "EntityCollisionMixin"
   ],
   "client": [
+    "client.EntityMixin",
+    "client.LivingEntityRendererMixin",
+    "client.MinecraftMixin",
+    "client.MixinAnimationTrailParticleProvider",
+    "client.MixinNightfallAvalonTrailParticleProvider",
+    "client.MixinPatchedItemInHandLayer",
+    "client.MixinPatchedLivingEntityRenderer",
+    "client.MixinZylobTrailParticleProvider"
   ],
   "injectors": {
     "defaultRequire": 1

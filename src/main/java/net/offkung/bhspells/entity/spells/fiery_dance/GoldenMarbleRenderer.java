@@ -11,11 +11,11 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.offkung.bhweapons.registry.ItemRegistry;
 import org.jetbrains.annotations.NotNull;
 
 public class GoldenMarbleRenderer extends EntityRenderer<GoldenMarbleEntity> {
-    private static final ItemStack MARBLE_STACK = new ItemStack(Items.SNOWBALL);
+    private static final ItemStack MARBLE_STACK = new ItemStack(ItemRegistry.BEEBOYCH_MARBLE.get());
 
     public GoldenMarbleRenderer(EntityRendererProvider.Context context) {
         super(context);

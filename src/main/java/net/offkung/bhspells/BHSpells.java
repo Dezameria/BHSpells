@@ -1,6 +1,7 @@
 package net.offkung.bhspells;
 
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -9,9 +10,12 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.offkung.bhspells.event.BypassDamageEvent;
-import net.offkung.bhspells.event.GoldenMarbleManager;
-import net.offkung.bhspells.event.SwordDashManager;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
+import net.offkung.bhspells.entity.spells.golden_cloud.GoldenCloudEntity;
+import net.offkung.bhspells.event.*;
+import net.offkung.bhspells.event.entity.BypassDamageEvent;
+import net.offkung.bhspells.event.EmbracingBosomEvents;
+import net.offkung.bhspells.event.FireBodyHitEvent;
 import net.offkung.bhspells.network.PacketHandler;
 import net.offkung.bhspells.registry.*;
 import org.jetbrains.annotations.NotNull;
@@ -34,9 +38,6 @@ public class BHSpells {
         AttributeRegistry.register(modEventBus);
         BHSchoolRegistry.register(modEventBus);
         MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(new BypassDamageEvent());
-        MinecraftForge.EVENT_BUS.register(SwordDashManager.class);
-        MinecraftForge.EVENT_BUS.register(GoldenMarbleManager.class);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

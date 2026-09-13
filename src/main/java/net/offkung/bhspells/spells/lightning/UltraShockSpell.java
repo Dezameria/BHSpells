@@ -4,7 +4,6 @@ import com.gametechbc.traveloptics.api.init.TravelopticsSchools;
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.spells.*;
-import io.redspace.ironsspellbooks.api.util.AnimationHolder;
 import io.redspace.ironsspellbooks.api.util.CameraShakeData;
 import io.redspace.ironsspellbooks.api.util.CameraShakeManager;
 import io.redspace.ironsspellbooks.api.util.Utils;
@@ -22,7 +21,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.offkung.bhspells.BHSpells;
-import net.offkung.bhspells.client.particle.YellowZapParticleOption;
+import net.offkung.bhspells.client.particle.CustomZapParticleOption;
 import net.offkung.bhspells.entity.spells.dark_rainfall.DarkRainFallAoe;
 import net.offkung.bhspells.util.BHParticleHelper;
 
@@ -132,13 +131,13 @@ public class UltraShockSpell extends AbstractSpell {
         level.getEntities(entity, entity.getBoundingBox().inflate(radius, radius, radius), (target) -> !DamageSources.isFriendlyFireBetween(target, entity) && Utils.hasLineOfSight(level, entity, target, true)).forEach(target -> {
             if (target instanceof LivingEntity livingEntity && livingEntity.distanceToSqr(entity) < radius * radius) {
                 Vec3 dest = livingEntity.getBoundingBox().getCenter();
-                ((ServerLevel) level).sendParticles(new YellowZapParticleOption(dest), start.x, start.y, start.z, 1, 0, 0, 0, 0);
+                ((ServerLevel) level).sendParticles(new CustomZapParticleOption(dest), start.x, start.y, start.z, 1, 0, 0, 0, 0);
                 MagicManager.spawnParticles(level, BHParticleHelper.YELLOW_ELECTRIC, livingEntity.getX(), livingEntity.getY() + livingEntity.getBbHeight() / 2, livingEntity.getZ(), 10, livingEntity.getBbWidth() / 3, livingEntity.getBbHeight() / 3, livingEntity.getBbWidth() / 3, 0.1, false);
             }
         });
         for (int i = 0; i < 3 + radius * 0.5f; i++) {
             Vec3 dest = Utils.getRandomVec3(1).add(0, 0.75, 0).scale(radius).multiply(0.75f, 0.25f, 0.75f).add(start);
-            ((ServerLevel) level).sendParticles(new YellowZapParticleOption(dest), start.x, start.y, start.z, 1, 0, 0, 0, 0);
+            ((ServerLevel) level).sendParticles(new CustomZapParticleOption(dest), start.x, start.y, start.z, 1, 0, 0, 0, 0);
         }
     }
 

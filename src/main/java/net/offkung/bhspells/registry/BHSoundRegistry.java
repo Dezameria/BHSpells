@@ -22,6 +22,8 @@ public class BHSoundRegistry {
     public static RegistryObject<SoundEvent> RUMBLE_1 = registerSoundEvent("rumble_1");
     public static RegistryObject<SoundEvent> SWORD_IMPACT = registerSoundEvent("sword_impact");
     public static RegistryObject<SoundEvent> IRON_PARRY = registerSoundEvent("iron_parry");
+    public static RegistryObject<SoundEvent> FIRE_IMPACT_SPELL = registerSoundEvent("fire_impact_spell");
+    public static RegistryObject<SoundEvent> GROUND_BREAKING = registerSoundEvent("ground_breaking");
 
     private static RegistryObject<SoundEvent> registerSoundEvent(String name) {
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(BHSpells.MODID, name)));

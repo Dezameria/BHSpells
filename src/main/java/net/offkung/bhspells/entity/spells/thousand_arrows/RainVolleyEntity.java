@@ -13,27 +13,30 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.offkung.bhspells.registry.EntityRegistry;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class RainVolleyEntity extends AbstractMagicProjectile {
     private static final int TOTAL_WAVES = 25;
     private static final int WAVE_INTERVAL_TICKS = 5;
-    private static final int ARROWS_PER_WAVE = 15;
-    private static final double RING_RADIUS = 4.0;
+    private static final int ARROWS_PER_WAVE = 20;
+    private static final double RING_RADIUS = 12.0;
     private static final double SPAWN_HEIGHT_ABOVE_GROUND = 12.0;
+    private static final double WAVE_SEEK_CHANCE = 0.55;
+    private static final double ARROW_SEEK_CHANCE = 0.4;
 
     private static final int STACK_CAP = 3;
 
@@ -42,7 +45,7 @@ public class RainVolleyEntity extends AbstractMagicProjectile {
 
     private double groundY;
     private boolean groundYFound = false;
-    private float perArrowDamage = 1.0f;
+    private float perArrowDamage = 0.5f;
     private int wavesFired = 0;
 
     public RainVolleyEntity(EntityType<? extends Projectile> pEntityType, Level pLevel) {
@@ -85,12 +88,15 @@ public class RainVolleyEntity extends AbstractMagicProjectile {
     private void fireWave(int waveIndex) {
         Vec3 center = this.position();
         double angleOffset = (waveIndex * 47.0) % 360.0;
-        double waveRadius = RING_RADIUS * Utils.random.nextDouble();
+
+        boolean waveIsSeeking = groundYFound && Utils.random.nextDouble() < WAVE_SEEK_CHANCE;
+        LivingEntity waveTarget = waveIsSeeking ? getRandomGroundTarget(this.level(), center.x, this.groundY, center.z, RING_RADIUS) : null;
 
         for (int i = 0; i < ARROWS_PER_WAVE; i++) {
             double angle = Math.toRadians(angleOffset + (360.0 / ARROWS_PER_WAVE) * i);
-            double spawnX = center.x + Math.cos(angle) * waveRadius;
-            double spawnZ = center.z + Math.sin(angle) * waveRadius;
+            double arrowRadius = RING_RADIUS * Math.sqrt(Utils.random.nextDouble());
+            double spawnX = center.x + Math.cos(angle) * arrowRadius;
+            double spawnZ = center.z + Math.sin(angle) * arrowRadius;
             double spawnY = this.groundY + SPAWN_HEIGHT_ABOVE_GROUND;
 
             RainVolleyArrow arrow = new RainVolleyArrow(this.level(), this.getOwner());
@@ -99,12 +105,34 @@ public class RainVolleyEntity extends AbstractMagicProjectile {
             arrow.shoot(new Vec3(0, -1.2, 0));
             arrow.setOwner(this.getOwner());
             arrow.setSourceVolley(this);
+
+            if (waveTarget != null && Utils.random.nextDouble() < ARROW_SEEK_CHANCE) {
+                arrow.setHomingTarget(waveTarget);
+            }
+
             level().addFreshEntity(arrow);
 
             MagicManager.spawnParticles(level(), ParticleTypes.FIREWORK, spawnX, spawnY, spawnZ, 2, .1, .1, .1, .05, false);
         }
 
         level().playSound(null, center.x, center.y, center.z, SoundRegistry.BOW_SHOOT.get(), SoundSource.NEUTRAL, 2.0f, 1.0f + Utils.random.nextFloat() * .3f);
+    }
+
+    private LivingEntity getRandomGroundTarget(Level level, double x, double groundY, double z, double radius) {
+        AABB area = new AABB(x - radius, groundY - 1.0, z - radius, x + radius, groundY + 3.0, z + radius);
+        Entity owner = getOwner();
+
+        List<LivingEntity> validEntities = new ArrayList<>();
+        for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, area)) {
+            if (entity != owner && entity.isAlive()) {
+                validEntities.add(entity);
+            }
+        }
+
+        if (validEntities.isEmpty()) {
+            return null;
+        }
+        return validEntities.get(level.random.nextInt(validEntities.size()));
     }
 
     public void addStack(LivingEntity target) {
