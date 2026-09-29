@@ -43,5 +43,70 @@
     "sounds": [
       "bhspells:ground_breaking"
     ]
+  },
+  "spell.generic.jade_rainy_wave": {
+    "sounds": [
+      "bhspells:seasonal_wave/rainy_wave"
+    ]
+  },
+  "spell.generic.jade_autumn_wave": {
+    "sounds": [
+      "bhspells:seasonal_wave/autumn_wave"
+    ]
+  },
+  "spell.generic.jade_spring_wave": {
+    "sounds": [
+      "bhspells:seasonal_wave/spring_wave"
+    ]
+  },
+  "spell.generic.jade_winter_wave": {
+    "sounds": [
+      "bhspells:seasonal_wave/winter_wave"
+    ]
+  },
+  "spell.generic.jade_summer_wave": {
+    "sounds": [
+      "bhspells:seasonal_wave/summer_wave"
+    ]
+  },
+  "entity.generic.jade_wave_hit": {
+    "sounds": [
+      "bhspells:seasonal_wave/jade_wave_hit"
+    ]
+  },
+  "entity.red_beryl_bird.bird_unleash": {
+    "sounds": [
+      "bhspells:red_beryl_bird/unleash_birds"
+    ]
+  },
+  "entity.red_beryl_bird.bird_hits": {
+    "sounds": [
+      "bhspells:red_beryl_bird/bird_hits"
+    ]
+  },
+  "entity.eagle.eagle_scream": {
+    "sounds": [
+      "bhspells:eagle/eagle_scream"
+    ]
+  },
+  "snake_emblem": {
+    "sounds": [
+      "bhspells:snake_emblem"
+    ]
+  },
+  "venomous_blossomfall_charge_1": {
+    "sounds": [
+      "bhspells:dezameria/venomousblossomfall_charge_1"
+    ]
+  },
+  "venomous_blossomfall_charge_2": {
+    "sounds": [
+      "bhspells:dezameria/venomousblossomfall_charge_2"
+    ]
+  },
+  "hymnofpurification": {
+    "sounds": [
+      "bhspells:dezameria/hymnofpurification"
+    ]
   }
 }

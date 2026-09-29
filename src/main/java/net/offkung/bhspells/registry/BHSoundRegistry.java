@@ -24,6 +24,19 @@ public class BHSoundRegistry {
     public static RegistryObject<SoundEvent> IRON_PARRY = registerSoundEvent("iron_parry");
     public static RegistryObject<SoundEvent> FIRE_IMPACT_SPELL = registerSoundEvent("fire_impact_spell");
     public static RegistryObject<SoundEvent> GROUND_BREAKING = registerSoundEvent("ground_breaking");
+    public static RegistryObject<SoundEvent> BIRD_HITS = registerSoundEvent("entity.red_beryl_bird.bird_hits");
+    public static RegistryObject<SoundEvent> UNLEASH_BIRDS = registerSoundEvent("entity.red_beryl_bird.bird_unleash");
+    public static RegistryObject<SoundEvent> AUTUMN_WAVE = registerSoundEvent("spell.generic.jade_autumn_wave");
+    public static RegistryObject<SoundEvent> SPRING_WAVE = registerSoundEvent("spell.generic.jade_spring_wave");
+    public static RegistryObject<SoundEvent> WINTER_WAVE = registerSoundEvent("spell.generic.jade_winter_wave");
+    public static RegistryObject<SoundEvent> SUMMER_WAVE = registerSoundEvent("spell.generic.jade_summer_wave");
+    public static RegistryObject<SoundEvent> RAINY_WAVE = registerSoundEvent("spell.generic.jade_rainy_wave");
+    public static RegistryObject<SoundEvent> JADE_WAVE_HIT = registerSoundEvent("entity.generic.jade_wave_hit");
+    public static RegistryObject<SoundEvent> EAGLE_SCREAM = registerSoundEvent("entity.eagle.eagle_scream");
+    public static RegistryObject<SoundEvent> SNAKE_EMBLEM = registerSoundEvent("snake_emblem");
+    public static RegistryObject<SoundEvent> VENOMOUS_BLOSSOMFALL_CHARGE_1 = registerSoundEvent("venomous_blossomfall_charge_1");
+    public static RegistryObject<SoundEvent> VENOMOUS_BLOSSOMFALL_CHARGE_2 = registerSoundEvent("venomous_blossomfall_charge_2");
+    public static RegistryObject<SoundEvent> HYMN_OF_PURIFICATION = registerSoundEvent("hymnofpurification");
 
     private static RegistryObject<SoundEvent> registerSoundEvent(String name) {
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(BHSpells.MODID, name)));

@@ -6,6 +6,7 @@ import io.redspace.ironsspellbooks.entity.spells.AbstractShieldEntity;
 import io.redspace.ironsspellbooks.entity.spells.ShieldPart;
 import io.redspace.ironsspellbooks.registries.SoundRegistry;
 import io.redspace.ironsspellbooks.util.OwnerHelper;
+import net.mcreator.dungeonsandcombat.init.DungeonsAndCombatModParticleTypes;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -119,7 +120,7 @@ public class GoldenGateEntity extends AbstractShieldEntity implements GeoEntity,
             this.setHealth(this.getHealth() - amount);
             if (!level().isClientSide && location != null) {
                 MagicManager.spawnParticles(level(), ParticleTypes.WAX_ON, location.x, location.y, location.z, 8, .1, .1, .1, .5, false);
-                MagicManager.spawnParticles(level(), ParticleRegistry.GOLD_SPARKLE_PARTICLE.get(), location.x, location.y, location.z, 3, .1, .1, .1, .3, false);
+                MagicManager.spawnParticles(level(), DungeonsAndCombatModParticleTypes.BLESSED_SPARKLE.get(), location.x, location.y, location.z, 3, .1, .1, .1, .3, false);
                 level().playSound(null, location.x, location.y, location.z, SoundRegistry.FORCE_IMPACT.get(), SoundSource.NEUTRAL, .8f, 1f);
             }
         }

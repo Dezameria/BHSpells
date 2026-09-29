@@ -4,7 +4,9 @@ import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.capabilities.magic.MagicManager;
 import io.redspace.ironsspellbooks.damage.DamageSources;
 import io.redspace.ironsspellbooks.entity.spells.AbstractMagicProjectile;
-import net.minecraft.client.Minecraft;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
+import net.offkung.bhspells.client.event.SwordDashClientHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.DustColorTransitionOptions;
@@ -202,8 +204,9 @@ public class PetalWaltzSword extends AbstractMagicProjectile implements GeoEntit
 
     @Override
     public boolean isCurrentlyGlowing() {
-        if (this.level().isClientSide && Minecraft.getInstance().player != null) {
-            return Minecraft.getInstance().player.getId() == this.entityData.get(DATA_OWNER_ID);
+        if (this.level().isClientSide) {
+            Boolean glowing = DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> SwordDashClientHandler.isSwordGlowing(this, this.entityData.get(DATA_OWNER_ID)));
+            return glowing != null && glowing;
         }
         return false;
     }

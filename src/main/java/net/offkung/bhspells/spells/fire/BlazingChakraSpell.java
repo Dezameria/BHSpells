@@ -1,0 +1,186 @@
+package net.offkung.bhspells.spells.fire;
+
+import io.redspace.ironsspellbooks.api.config.DefaultConfig;
+import io.redspace.ironsspellbooks.api.magic.MagicData;
+import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
+import io.redspace.ironsspellbooks.api.spells.*;
+import io.redspace.ironsspellbooks.api.util.AnimationHolder;
+import io.redspace.ironsspellbooks.api.util.Utils;
+import io.redspace.ironsspellbooks.damage.DamageSources;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.TickTask;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.offkung.bhspells.BHSpells;
+import net.offkung.bhspells.compat.api.AnimationCue;
+import net.offkung.bhspells.compat.api.CompatResult;
+import net.offkung.bhspells.compat.epicfight.EpicFightCompat;
+import net.offkung.bhspells.compat.epicfight.skills.blazing_chakra.BlazingChakraVfx;
+import net.offkung.bhspells.config.SpellConfig;
+
+import java.util.List;
+
+@AutoSpellConfig
+public class BlazingChakraSpell extends AbstractSpell {
+    private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(BHSpells.MODID, "blazing_chakra");
+
+    public static final float BASE_DAMAGE = 20.0F;
+    public static final float DAMAGE_PER_LEVEL = 4.0F;
+    public static final int BASE_MANA_COST = 50;
+    public static final int MANA_COST_PER_LEVEL = 10;
+    public static final double COOLDOWN_SECONDS = 15.0;
+
+    @Override
+    public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
+        return List.of(
+                Component.translatable("ui.irons_spellbooks.damage", Utils.stringTruncation(getDamage(spellLevel, caster), 1)),
+                Component.translatable("ui.irons_spellbooks.radius", Utils.stringTruncation(getRadius(spellLevel, caster), 1)),
+                Component.translatable("ui.irons_spellbooks.effect_length", Utils.timeFromTicks(getFireDuration(spellLevel, caster), 1))
+        );
+    }
+
+    private final DefaultConfig defaultConfig = new DefaultConfig()
+            .setMinRarity(SpellRarity.RARE)
+            .setSchoolResource(SchoolRegistry.FIRE_RESOURCE)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
+            .build();
+
+    public BlazingChakraSpell() {
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
+        this.castTime = 0;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.BlazingChakra.getBaseMana() + (spellLevel - 1) * SpellConfig.BlazingChakra.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.BlazingChakra.getCooldown() * 20);
+    }
+
+    @Override
+    public CastType getCastType() {
+        return CastType.INSTANT;
+    }
+
+    @Override
+    public DefaultConfig getDefaultConfig() {
+        return defaultConfig;
+    }
+
+    @Override
+    public ResourceLocation getSpellResource() {
+        return spellId;
+    }
+
+    @Override
+    public AnimationHolder getCastFinishAnimation() {
+        return SpellAnimations.OVERHEAD_MELEE_SWING_ANIMATION;
+    }
+
+    public float getDamage(int spellLevel, LivingEntity caster) {
+        float base = SpellConfig.BlazingChakra.getBaseDamage();
+        float perLevel = SpellConfig.BlazingChakra.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(caster);
+    }
+
+    public float getRadius(int spellLevel, LivingEntity caster) {
+        return BlazingChakraVfx.MAX_RANGE;
+    }
+
+    public int getFireDuration(int spellLevel, LivingEntity caster) {
+        return (5 + spellLevel) * 20;
+    }
+
+    @Override
+    public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource, MagicData playerMagicData) {
+        CompatResult result = EpicFightCompat.playAnimation(entity, AnimationCue.BLAZING_CHAKRA);
+
+        if (result != CompatResult.APPLIED && level instanceof ServerLevel serverLevel) {
+            serverLevel.getServer().tell(new TickTask(serverLevel.getServer().getTickCount() + 20, () -> {
+                if (!entity.isAlive()) {
+                    return;
+                }
+                dealShockwaveDamage(serverLevel, entity, spellLevel);
+            }));
+        }
+
+        super.onCast(level, spellLevel, entity, castSource, playerMagicData);
+    }
+
+    private void dealShockwaveDamage(ServerLevel serverLevel, LivingEntity caster, int spellLevel) {
+        Vec3 origin = caster.position();
+        float maxRadius = getRadius(spellLevel, caster);
+        float closeRadius = BlazingChakraVfx.CLOSE_RANGE;
+        float maxDamage = getDamage(spellLevel, caster);
+        float minDamage = maxDamage * 0.25F; // 25% damage falloff at max distance (12 blocks)
+
+        AABB area = new AABB(origin.x - maxRadius, origin.y - 3.0D, origin.z - maxRadius, origin.x + maxRadius, origin.y + 3.0D, origin.z + maxRadius);
+
+        for (LivingEntity target : serverLevel.getEntitiesOfClass(LivingEntity.class, area)) {
+            if (target == caster || !target.isAlive() || target.isSpectator() || target.isInvulnerable()) {
+                continue;
+            }
+            if (DamageSources.isFriendlyFireBetween(caster, target)) {
+                continue;
+            }
+
+            double dist = target.position().distanceTo(origin);
+            if (dist > maxRadius) {
+                continue;
+            }
+
+            float damage;
+            int fireSeconds;
+            if (dist <= closeRadius) {
+                damage = maxDamage;
+                fireSeconds = 5;
+            } else {
+                float falloffRatio = (float) ((dist - closeRadius) / (maxRadius - closeRadius));
+                falloffRatio = Mth.clamp(falloffRatio, 0.0F, 1.0F);
+                damage = Mth.lerp(falloffRatio, maxDamage, minDamage);
+                fireSeconds = 2;
+            }
+
+            // Always ignite all targets within skill range (even if blocking or in i-frames)
+            target.setSecondsOnFire(fireSeconds + spellLevel);
+
+            // Apply Iron's Spells Fire Magic Damage
+            boolean damaged = DamageSources.applyDamage(target, damage, this.getDamageSource(caster));
+
+            // Knockback radiating outward from ground slam
+            Vec3 pushDir = target.position().subtract(origin);
+            double horizontalDist = Math.sqrt(pushDir.x * pushDir.x + pushDir.z * pushDir.z);
+            if (horizontalDist > 0.001D) {
+                double strength = (1.0D - (dist / maxRadius)) * 1.2D + 0.3D;
+                target.push(
+                        (pushDir.x / horizontalDist) * strength,
+                        0.35D,
+                        (pushDir.z / horizontalDist) * strength
+                );
+                target.hurtMarked = true;
+            }
+        }
+
+        serverLevel.playSound(null, origin.x, origin.y, origin.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.5F, 1.0F);
+
+        // Fallback spiral particles if Epic Fight is not loaded
+        if (!EpicFightCompat.isAvailable()) {
+            BlazingChakraVfx.spawnSpiralShockwave(serverLevel, caster);
+        }
+    }
+}

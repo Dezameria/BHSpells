@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.offkung.bhspells.BHSpells;
 
 public class RadiantCrystalRenderer extends EntityRenderer<RadiantCrystalEntity> {
@@ -37,6 +38,17 @@ public class RadiantCrystalRenderer extends EntityRenderer<RadiantCrystalEntity>
         scale = (scale - 1) * .25f + 1;
         poseStack.scale(scale, scale, scale);
         poseStack.translate(0, -anim * (22 + 22 + 24) / 16f, 0);
+
+        //once a second the crystal pops upward like a tremor block, then settles back down smoothly
+        float shakeCycle = 30f;
+        float bounceDuration = 15f;
+        float phase = (entity.getId() % 40) * 1.7f;
+        float localTick = (f + phase) % shakeCycle;
+        if (localTick < bounceDuration) {
+            float p = localTick / bounceDuration;
+            float bounce = Mth.sin(Mth.PI * (float) Math.pow(p, 0.6));
+            poseStack.translate(0, -bounce * 0.2f * scale, 0);
+        }
 
         this.model.setupAnim(entity, partialTicks, 0.0F, 0.0F, entity.getYRot(), entity.getXRot());
         VertexConsumer vertexconsumer = multiBufferSource.getBuffer(RenderType.entityCutoutNoCull(getTextureLocation(entity)));

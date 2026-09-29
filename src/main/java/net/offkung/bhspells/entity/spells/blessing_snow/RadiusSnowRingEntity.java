@@ -161,7 +161,7 @@ public class RadiusSnowRingEntity extends AoeEntity {
                             healEntry.totalHealRemaining -= healAmount;
 
                             // Snowflake and heal particles on the entity
-                            MagicManager.spawnParticles(level(), ParticleRegistry.CLEANSE_PARTICLE.get(), livingTarget.getX(), livingTarget.getY() + livingTarget.getBbHeight() * 0.5, livingTarget.getZ(), 10, 0.4, 0.4, 0.4, 0, true);
+                            MagicManager.spawnParticles(level(), ParticleRegistry.SNOW_DUST.get(), livingTarget.getX(), livingTarget.getY() + livingTarget.getBbHeight() * 0.5, livingTarget.getZ(), 15, 0, 0, 0, 0.2, true);
                             serverLevel.playSound(null, livingTarget.getX(), livingTarget.getY(), livingTarget.getZ(), SoundEvents.CONDUIT_ACTIVATE, SoundSource.NEUTRAL, 0.8f, 2.0f);
                         }
                     }

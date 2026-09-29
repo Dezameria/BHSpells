@@ -8,6 +8,7 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -51,6 +52,38 @@ public class MobEffectsRegistry {
     });
     public static final RegistryObject<MobEffect> BLESSING_SNOW_MANA = MOB_EFFECTS.register("blessing_snow_mana", () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0xFFFFFF){});
     public static final RegistryObject<MobEffect> BLESSING_SNOW = MOB_EFFECTS.register("blessing_snow", () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0xFFFFFF){});
-    public static final RegistryObject<MobEffect> BLESSING_SNOW_CHECK = MOB_EFFECTS.register("blessing_snow_check", () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0xFFFFFF){});
     public static final RegistryObject<MobEffect> DRAGON_FROST = MOB_EFFECTS.register("dragon_frost", DragonFrostEffect::new);
+    public static final RegistryObject<MobEffect> GOLDEN_GRASP = MOB_EFFECTS.register("golden_grasp", GoldenGraspEffect::new);
+    public static final RegistryObject<MobEffect> GOLDEN_GRASP_HELPER = MOB_EFFECTS.register("golden_grasp_helper", GoldenGraspHelperEffect::new);
+    public static final RegistryObject<MobEffect> WING_OF_WIND_FLIGHT = MOB_EFFECTS.register("wing_of_wind_flight", () -> {
+        var effect = new WingOfWindFlightEffect();
+        try {
+            var flightAttr = ForgeRegistries.ATTRIBUTES.getValue(WingOfWindFlightEffect.CAELUS_FALL_FLYING);
+            if (flightAttr != null) {
+                effect.addAttributeModifier(flightAttr, WingOfWindFlightEffect.FLIGHT_MODIFIER_UUID.toString(), 1.0D, AttributeModifier.Operation.ADDITION);
+            }
+        } catch (Throwable ignored) {
+        }
+        return effect;
+    });
+    public static final RegistryObject<MobEffect> WING_OF_WIND_IMMOBILIZE = MOB_EFFECTS.register("wind_immobilize", WindImmobilizeEffect::new);
+    public static final RegistryObject<MobEffect> SMILES_OF_FIRE = MOB_EFFECTS.register("smiles_of_fire", () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0xFF8DA1){});
+    public static final RegistryObject<MobEffect> SMILES_OF_FIRE_CD = MOB_EFFECTS.register("smiles_of_fire_cd", () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0xFF8DA1){});
+    public static final RegistryObject<MobEffect> WHEEL_OF_KARMA = MOB_EFFECTS.register("wheel_of_karma", WheelOfKarmaEffect::new);
+    public static final RegistryObject<MobEffect> GILDED_HARE = MOB_EFFECTS.register("gilded_hare", GildedHareEffect::new);
+    public static final RegistryObject<MobEffect> GILDED_HARE_MARK = MOB_EFFECTS.register("gilded_hare_mark", GildedHareMarkEffect::new);
+    public static final RegistryObject<MobEffect> JADE_AURA = MOB_EFFECTS.register("jade_aura", JadeAuraEffect::new);
+    public static final RegistryObject<MobEffect> HYMN_OF_PURIFICATION = MOB_EFFECTS.register("hymn_of_purification", HymnofPurificationEffect::new);
+    public static final RegistryObject<MobEffect> TIGERSHADE_MARK = MOB_EFFECTS.register("tigershade_mark", TigershadeMarkEffect::new);
+    public static final RegistryObject<MobEffect> TIGERSHADE_STANCE = MOB_EFFECTS.register("tigershade_stance", TigershadeStanceEffect::new);
+    public static final RegistryObject<MobEffect> COOLDOWN = MOB_EFFECTS.register("cooldown", () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0xFF8DA1){});
+    public static final RegistryObject<MobEffect> AZURE_VENOMOUS = MOB_EFFECTS.register("azure_venomous", AzureVenomousEffect::new);
+    public static final RegistryObject<MobEffect> WHITE_FLAME_BURN = MOB_EFFECTS.register("white_flame_burn", WhiteFlameBurnEffect::new);
+    public static final RegistryObject<MobEffect> GALE_DRIVE_DASH = MOB_EFFECTS.register("gale_drive_dash", GaleDriveDashEffect::new);
+    public static final RegistryObject<MobEffect> GALE_FALL_IMPACT = MOB_EFFECTS.register("gale_fall_impact", GaleFallImpactEffect::new);
+    public static final RegistryObject<MobEffect> JADE_CLUSTER = MOB_EFFECTS.register("jade_cluster", () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0xFF8DA1){});
+
+    public static void register(IEventBus modEventBus) {
+        MOB_EFFECTS.register(modEventBus);
+    }
 }

@@ -14,6 +14,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.offkung.bhspells.BHSpells;
 import net.offkung.bhspells.entity.spells.aqua_flower.AquaFlower;
@@ -49,6 +50,11 @@ public class AquaFlowerSpell extends AbstractSpell {
     @Override
     public ResourceLocation getSpellResource() {
         return spellId;
+    }
+
+    @Override
+    public boolean canBeInterrupted(Player player) {
+        return false;
     }
 
     @Override

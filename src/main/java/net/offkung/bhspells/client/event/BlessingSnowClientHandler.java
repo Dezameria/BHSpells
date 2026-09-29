@@ -1,6 +1,5 @@
 package net.offkung.bhspells.client.event;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -18,9 +17,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.offkung.bhspells.BHSpells;
 import net.offkung.bhspells.entity.spells.blessing_snow.RadiusSnowRingEntity;
 import net.offkung.bhspells.network.PacketHandler;
-import net.offkung.bhspells.network.client.BlessingSnowSetRadiusPacket;
 import net.offkung.bhspells.network.client.BlessingSnowTargetSelectPacket;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.HashSet;
 import java.util.List;
@@ -28,26 +25,10 @@ import java.util.Set;
 
 @Mod.EventBusSubscriber(modid = BHSpells.MODID, value = Dist.CLIENT)
 public class BlessingSnowClientHandler {
-    public static final int[] RADIUS_OPTIONS = {5, 10, 20, 30};
-
-    private static boolean selectingRadius = false;
-    private static int selectedIndex = 0;
-
-    private static boolean wasLeftPressed = false;
-    private static boolean wasRightPressed = false;
-    private static int tickTimer = 0;
     private static long lastTargetSelectTime = 0;
 
     // Entity IDs of targets selected for healing by the caster
     private static final Set<Integer> glowingTargetIds = new HashSet<>();
-
-    public static boolean isSelectingRadius() {
-        return selectingRadius;
-    }
-
-    public static int getSelectedRadius() {
-        return RADIUS_OPTIONS[selectedIndex];
-    }
 
     public static boolean isTargetGlowingForCaster(Entity entity) {
         if (entity == null) return false;
@@ -74,7 +55,7 @@ public class BlessingSnowClientHandler {
     }
 
     public static boolean hasActiveRing(Player player) {
-        if (player == null || player.level() == null) return false;
+        if (player == null) return false;
         List<RadiusSnowRingEntity> rings = player.level().getEntitiesOfClass(RadiusSnowRingEntity.class, player.getBoundingBox().inflate(35.0), ring -> ring.getOwner() == player && !ring.isRemoved());
         return !rings.isEmpty();
     }
@@ -87,30 +68,6 @@ public class BlessingSnowClientHandler {
         }
     }
 
-    public static void setSelectingRadius(boolean active, int radius) {
-        selectingRadius = active;
-        if (active) {
-            selectedIndex = 0;
-            for (int i = 0; i < RADIUS_OPTIONS.length; i++) {
-                if (RADIUS_OPTIONS[i] == radius) {
-                    selectedIndex = i;
-                    break;
-                }
-            }
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.player != null) {
-                displayRadiusActionBar(mc.player);
-            }
-        } else {
-            wasLeftPressed = false;
-            wasRightPressed = false;
-        }
-    }
-
-    private static void displayRadiusActionBar(Player player) {
-        player.displayClientMessage(Component.literal("§b⟪" + RADIUS_OPTIONS[selectedIndex] + " Blocks⟫"), true);
-    }
-
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
@@ -121,43 +78,6 @@ public class BlessingSnowClientHandler {
         // Clean up glowing targets if no active ring is present
         if (!glowingTargetIds.isEmpty() && !hasActiveRing(mc.player)) {
             glowingTargetIds.clear();
-        }
-
-        if (!selectingRadius) return;
-
-        if (!mc.player.isAlive()) {
-            selectingRadius = false;
-            return;
-        }
-
-        // Don't process arrow keys if a GUI screen/chat is open
-        if (mc.screen != null) return;
-
-        long window = mc.getWindow().getWindow();
-        boolean leftDown = InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT);
-        boolean rightDown = InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT);
-
-        // Right arrow: select next radius
-        if (rightDown && !wasRightPressed) {
-            selectedIndex = (selectedIndex + 1) % RADIUS_OPTIONS.length;
-            displayRadiusActionBar(mc.player);
-            PacketHandler.INSTANCE.sendToServer(new BlessingSnowSetRadiusPacket(RADIUS_OPTIONS[selectedIndex]));
-        }
-
-        // Left arrow: select previous radius
-        if (leftDown && !wasLeftPressed) {
-            selectedIndex = (selectedIndex - 1 + RADIUS_OPTIONS.length) % RADIUS_OPTIONS.length;
-            displayRadiusActionBar(mc.player);
-            PacketHandler.INSTANCE.sendToServer(new BlessingSnowSetRadiusPacket(RADIUS_OPTIONS[selectedIndex]));
-        }
-
-        wasLeftPressed = leftDown;
-        wasRightPressed = rightDown;
-
-        // Keep action bar visible while selecting
-        tickTimer++;
-        if (tickTimer % 15 == 0) {
-            displayRadiusActionBar(mc.player);
         }
     }
 
@@ -221,10 +141,8 @@ public class BlessingSnowClientHandler {
             lastTargetSelectTime = now;
             if (glowingTargetIds.contains(target.getId())) {
                 glowingTargetIds.remove(target.getId());
-                player.displayClientMessage(Component.literal("§cDeselected " + target.getDisplayName().getString() + "!"), true);
             } else {
                 glowingTargetIds.add(target.getId());
-                player.displayClientMessage(Component.literal("§aSelected " + target.getDisplayName().getString() + " for healing!"), true);
             }
             PacketHandler.INSTANCE.sendToServer(new BlessingSnowTargetSelectPacket(target.getId()));
             return true;

@@ -54,13 +54,13 @@ public class BlessingSnowTargetSelectPacket {
                         ring.removeHealTarget(livingTarget.getUUID());
                         PacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new BlessingSnowTargetGlowSyncPacket(msg.targetEntityId, false));
                         player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.UI_BUTTON_CLICK.get(), SoundSource.PLAYERS, 0.6f, 0.8f);
-                        player.displayClientMessage(Component.literal("§cDeselected " + livingTarget.getDisplayName().getString() + "!"), true);
+                        player.displayClientMessage(Component.literal("§cยกเลิกการรักษา " + livingTarget.getDisplayName().getString() + " แล้ว!"), true);
                     } else {
                         // Select target
                         ring.addHealTarget(livingTarget, distance);
                         PacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new BlessingSnowTargetGlowSyncPacket(msg.targetEntityId, true));
                         player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8f, 1.2f);
-                        player.displayClientMessage(Component.literal("§aSelected " + livingTarget.getDisplayName().getString() + " for healing!"), true);
+                        player.displayClientMessage(Component.literal("§aเลือกรักษา " + livingTarget.getDisplayName().getString() + " แล้ว!"), true);
                     }
                 }
             }

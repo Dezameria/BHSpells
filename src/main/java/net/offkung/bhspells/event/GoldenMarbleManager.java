@@ -18,6 +18,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.offkung.bhspells.entity.spells.fiery_dance.GoldenMarbleEntity;
 import net.offkung.bhspells.registry.BHSoundRegistry;
+import net.offkung.bhspells.spells.fire.FieryDanceSpell;
 
 import java.lang.ref.WeakReference;
 import java.util.*;
@@ -101,7 +102,7 @@ public class GoldenMarbleManager {
     @SubscribeEvent
     public static void onLivingKnockBack(LivingKnockBackEvent event) {
         LivingEntity target = event.getEntity();
-        if (target != null && hasActiveGroup(target.getUUID())) {
+        if (target != null && (hasActiveGroup(target.getUUID()) || FieryDanceSpell.isCasting(target))) {
             event.setCanceled(true);
         }
     }

@@ -42,18 +42,28 @@ public class IntrusionChainManager {
         return ACTIVE_STATES.containsKey(caster.getUUID());
     }
 
-    public static void onCast(LivingEntity caster) {
-        onCast(caster, IntrusionChainEntity.Type.BUFF);
+    public static int getConnectedCount(LivingEntity caster) {
+        ChainState state = ACTIVE_STATES.get(caster.getUUID());
+        return state != null ? state.chains.size() : 0;
     }
 
-    public static void onCast(LivingEntity caster, IntrusionChainEntity.Type chainType) {
-        if (!(caster.level() instanceof ServerLevel casterLevel)) return;
+    public static boolean isFullyConnected(LivingEntity caster) {
+        ChainState state = ACTIVE_STATES.get(caster.getUUID());
+        return state != null && state.chains.size() >= MAX_ALLIES;
+    }
+
+    public static boolean onCast(LivingEntity caster) {
+        return onCast(caster, IntrusionChainEntity.Type.BUFF);
+    }
+
+    public static boolean onCast(LivingEntity caster, IntrusionChainEntity.Type chainType) {
+        if (!(caster.level() instanceof ServerLevel casterLevel)) return false;
 
         ChainState state = ACTIVE_STATES.get(caster.getUUID());
 
         // Re-casting while aiming at an already-linked target forcibly severs that chain immediately.
         if (state != null && tryForceBreakLinkedTarget(caster, state, casterLevel)) {
-            return;
+            return false;
         }
 
         if (state == null) {
@@ -64,24 +74,24 @@ public class IntrusionChainManager {
 
         if (state.chains.size() >= MAX_ALLIES) {
             sendActionbar(caster, chainType == IntrusionChainEntity.Type.BUFF ? "§cมีพันธมิตร 2 คนผูดมัดกับคุณอยู่แล้ว" : "§cมีศัตรู 2 คนผูดมัดกับคุณอยู่แล้ว");
-            return;
+            return false;
         }
 
-        trySelectTarget(caster, state);
+        return trySelectTarget(caster, state);
     }
 
-    private static void trySelectTarget(LivingEntity caster, ChainState state) {
+    private static boolean trySelectTarget(LivingEntity caster, ChainState state) {
         Level level = caster.level();
         LivingEntity target = getRaycastAllyTarget(level, caster, SELECT_RANGE);
 
         if (target == null) {
             sendActionbar(caster, remainingMessage(state));
-            return;
+            return false;
         }
 
         if (target == caster || state.chains.containsKey(target.getUUID())) {
             sendActionbar(caster, state.type == IntrusionChainEntity.Type.BUFF ? "§aพันธมิตรคนนั้นผูกมัดแล้ว" : "§cศัตรูคนนั้นผูกมัดแล้ว");
-            return;
+            return false;
         }
 
         IntrusionChainEntity chain = new IntrusionChainEntity(level, caster, target, state.type);
@@ -103,8 +113,10 @@ public class IntrusionChainManager {
             if (state.type == IntrusionChainEntity.Type.BUFF) {
                 applyCasterBuff(caster);
             }
+            return true;
         } else {
             sendActionbar(caster, remainingMessage(state));
+            return false;
         }
     }
 
@@ -189,7 +201,7 @@ public class IntrusionChainManager {
                     if (!chainEntry.getValue().isRemoved()) {
                         chainEntry.getValue().forceBreakPublic();
                     }
-                    LivingEntity enemy = resolveLivingById(serverLevel, chainEntry.getKey());
+                    LivingEntity enemy = resolveLivingFromServer(serverLevel, chainEntry.getKey());
                     if (enemy != null) {
                         removeEnemyDebuff(enemy);
                     }
@@ -206,9 +218,10 @@ public class IntrusionChainManager {
             while (chainIt.hasNext()) {
                 Map.Entry<UUID, IntrusionChainEntity> chainEntry = chainIt.next();
                 IntrusionChainEntity chain = chainEntry.getValue();
-                LivingEntity ally = resolveLivingById(serverLevel, chainEntry.getKey());
+                LivingEntity ally = resolveLivingFromServer(serverLevel, chainEntry.getKey());
 
-                boolean tooFar = ally != null && ally.distanceToSqr(caster) > MAX_LINK_DISTANCE * MAX_LINK_DISTANCE;
+                boolean sameDimension = ally != null && ally.level() == caster.level();
+                boolean tooFar = sameDimension && ally.distanceToSqr(caster) > MAX_LINK_DISTANCE * MAX_LINK_DISTANCE;
 
                 if (chain.isRemoved() || tooFar) {
                     if (!chain.isRemoved() && tooFar) {
@@ -242,7 +255,7 @@ public class IntrusionChainManager {
 
             if (caster.tickCount % EFFECT_REFRESH_TICKS == 0) {
                 for (UUID targetUUID : state.chains.keySet()) {
-                    LivingEntity target = resolveLivingById(serverLevel, targetUUID);
+                    LivingEntity target = resolveLivingFromServer(serverLevel, targetUUID);
                     if (target == null) continue;
 
                     if (state.type == IntrusionChainEntity.Type.BUFF) {
@@ -275,7 +288,7 @@ public class IntrusionChainManager {
         state.applyingSharedDamage = true;
         try {
             for (UUID targetUUID : state.chains.keySet()) {
-                LivingEntity enemy = resolveLivingById(serverLevel, targetUUID);
+                LivingEntity enemy = resolveLivingFromServer(serverLevel, targetUUID);
                 if (enemy != null && enemy.isAlive()) {
                     DamageSources.applyDamage(enemy, sharedAmount, sourceOfCasterDamage);
                 }
@@ -291,7 +304,7 @@ public class IntrusionChainManager {
             if (!chain.isRemoved()) {
                 chain.forceBreakPublic();
             }
-            LivingEntity ally = resolveLivingById(level, entry.getKey());
+            LivingEntity ally = resolveLivingFromServer(level, entry.getKey());
             if (ally != null) {
                 if (state.type == IntrusionChainEntity.Type.BUFF) {
                     removeAllyBuff(ally);
@@ -370,6 +383,17 @@ public class IntrusionChainManager {
     private static LivingEntity resolveLivingById(ServerLevel level, UUID uuid) {
         Entity entity = level.getEntity(uuid);
         return entity instanceof LivingEntity living && living.isAlive() ? living : null;
+    }
+
+    @Nullable
+    private static LivingEntity resolveLivingFromServer(ServerLevel anyLevel, UUID uuid) {
+        for (ServerLevel level : anyLevel.getServer().getAllLevels()) {
+            Entity entity = level.getEntity(uuid);
+            if (entity instanceof LivingEntity living && living.isAlive()) {
+                return living;
+            }
+        }
+        return null;
     }
 
     private static void sendActionbar(LivingEntity entity, String message) {

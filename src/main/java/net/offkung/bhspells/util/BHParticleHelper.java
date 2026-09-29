@@ -15,4 +15,7 @@ public class BHParticleHelper {
     public static final ParticleOptions PILLAR_GREEN_PASSIVE_ENCHANT = new GlowingEnchantmentParticleOptions(new Vector3f(0.458824F, 0.796078F, 0.309804F), 0.06F, false, 12);
     public static final ParticleOptions RED_SPARKS = new SparkParticleOptions(new Vector3f(1, 0f, 0f));
     public static final ParticleOptions ORANGE_SPARKS = new SparkParticleOptions(new Vector3f(1f, 0.35f, 0f));
+    public static final ParticleOptions PINK_FIRE = ParticleRegistry.PINK_DRAGON_FIRE.get();
+    public static final ParticleOptions PINK_FIRE_EMITTER = ParticleRegistry.PINK_FIRE.get();
+    public static final ParticleOptions PINK_SPARKS = new SparkParticleOptions(new Vector3f(1, 0.55f, 0.63f));
 }

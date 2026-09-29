@@ -8,6 +8,7 @@ import io.redspace.ironsspellbooks.entity.spells.AbstractMagicProjectile;
 import io.redspace.ironsspellbooks.entity.spells.ice_tomb.IceTombEntity;
 import io.redspace.ironsspellbooks.registries.SoundRegistry;
 import io.redspace.ironsspellbooks.util.ParticleHelper;
+import net.mcreator.dungeonsandcombat.init.DungeonsAndCombatModParticleTypes;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -115,7 +116,7 @@ public class StoneCrumbleProjectile extends AbstractMagicProjectile implements G
     public void trailParticles() {
         for (int i = 0; i < 1; i++) {
             Vec3 random = new Vec3(Utils.getRandomScaled(this.getBbWidth() * .5f), 0, Utils.getRandomScaled(this.getBbWidth() * .5f));
-            level().addParticle(ParticleRegistry.GOLD_SPARKLE_PARTICLE.get(), getX() + random.x, getY(), getZ() + random.z, 0, -.05, 0);
+            level().addParticle(DungeonsAndCombatModParticleTypes.BLESSED_SPARKLE.get(), getX() + random.x, getY(), getZ() + random.z, 0, -.05, 0);
         }
     }
 
@@ -238,8 +239,8 @@ public class StoneCrumbleProjectile extends AbstractMagicProjectile implements G
 
     @Override
     public void impactParticles(double x, double y, double z) {
-        MagicManager.spawnParticles(level(), ParticleRegistry.GOLD_SPARKLE_PARTICLE.get(), x, y, z, 50, .8, .1, .8, 0.2, false);
-        MagicManager.spawnParticles(level(), ParticleRegistry.GOLD_SPARKLE_PARTICLE.get(), x, y, z, 35, .5, .1, .5, 0.3, false);
+        MagicManager.spawnParticles(level(), DungeonsAndCombatModParticleTypes.BLESSED_SPARKLE.get(), x, y, z, 50, .8, .1, .8, 0.2, false);
+        MagicManager.spawnParticles(level(), DungeonsAndCombatModParticleTypes.BLESSED_SPARKLE.get(), x, y, z, 35, .5, .1, .5, 0.3, false);
     }
 
     @Override

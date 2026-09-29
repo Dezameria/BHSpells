@@ -1,0 +1,155 @@
+package net.offkung.bhspells.spells.lightning;
+
+import io.redspace.ironsspellbooks.api.config.DefaultConfig;
+import io.redspace.ironsspellbooks.api.magic.MagicData;
+import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
+import io.redspace.ironsspellbooks.api.spells.*;
+import io.redspace.ironsspellbooks.api.util.Utils;
+import io.redspace.ironsspellbooks.damage.DamageSources;
+import io.redspace.ironsspellbooks.particle.ZapParticleOption;
+import io.redspace.ironsspellbooks.spells.ender.TeleportSpell;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.offkung.bhspells.BHSpells;
+import net.offkung.bhspells.config.SpellConfig;
+
+import java.util.List;
+import java.util.Optional;
+
+@AutoSpellConfig
+public class ThunderStepSpell extends AbstractSpell {
+    private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(BHSpells.MODID, "thunder_step");
+
+    public static final float BASE_DAMAGE = 10.0F;
+    public static final float DAMAGE_PER_LEVEL = 2.0F;
+    public static final int BASE_MANA_COST = 75;
+    public static final int MANA_COST_PER_LEVEL = 15;
+    public static final double COOLDOWN_SECONDS = 8.0;
+
+    @Override
+    public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
+        return List.of(Component.translatable("ui.irons_spellbooks.damage", Utils.stringTruncation(getDamage(spellLevel, caster), 1)));
+    }
+
+    private final DefaultConfig defaultConfig = new DefaultConfig()
+            .setMinRarity(SpellRarity.UNCOMMON)
+            .setSchoolResource(SchoolRegistry.LIGHTNING_RESOURCE)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
+            .build();
+
+    public ThunderStepSpell() {
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
+        this.castTime = 0;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.ThunderStep.getBaseMana() + (spellLevel - 1) * SpellConfig.ThunderStep.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.ThunderStep.getCooldown() * 20);
+    }
+
+    @Override
+    public CastType getCastType() {
+        return CastType.INSTANT;
+    }
+
+    @Override
+    public DefaultConfig getDefaultConfig() {
+        return defaultConfig;
+    }
+
+    @Override
+    public ResourceLocation getSpellResource() {
+        return spellId;
+    }
+
+    @Override
+    public Optional<SoundEvent> getCastStartSound() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<SoundEvent> getCastFinishSound() {
+        return Optional.of(SoundEvents.ILLUSIONER_PREPARE_BLINDNESS);
+    }
+
+    @Override
+    public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource, MagicData playerMagicData) {
+        var teleportData = (TeleportSpell.TeleportData) playerMagicData.getAdditionalCastData();
+        Vec3 dest = null;
+        if (teleportData != null) {
+            var potentialTarget = teleportData.getTeleportTargetPosition();
+            if (potentialTarget != null) {
+                dest = potentialTarget;
+            }
+        }
+
+        if (dest == null) {
+            dest = TeleportSpell.findTeleportLocation(level, entity, getDistance(spellLevel, entity));
+        }
+
+        zapEntitiesBetween(entity, spellLevel, dest);
+        Vec3 travel = dest.subtract(entity.position());
+        for (int i = 0; i < 7; i++) {
+            Vec3 random1 = Utils.getRandomVec3(0.5f).multiply(entity.getBbWidth(), entity.getBbHeight(), entity.getBbWidth());
+            Vec3 random2 = Utils.getRandomVec3(0.8f).multiply(entity.getBbWidth(), entity.getBbHeight(), entity.getBbWidth());
+            float yOffset = i / 7f * entity.getBbHeight();
+            Vec3 midpoint = entity.position().add(travel.scale(0.5f)).add(random2);
+            ((ServerLevel) level).sendParticles(new ZapParticleOption(random1.add(entity.getX(), entity.getY() + yOffset, entity.getZ())), midpoint.x, midpoint.y, midpoint.z, 1, 0, 0, 0, 0);
+            ((ServerLevel) level).sendParticles(new ZapParticleOption(random1.scale(-1f).add(dest.x, dest.y + yOffset, dest.z)), midpoint.x, midpoint.y, midpoint.z, 1, 0, 0, 0, 0);
+        }
+
+        if (entity.isPassenger()) {
+            entity.stopRiding();
+        }
+        entity.teleportTo(dest.x, dest.y, dest.z);
+        entity.resetFallDistance();
+
+        playerMagicData.resetAdditionalCastData();
+
+        entity.playSound(getCastFinishSound().get(), 2.0f, 1.0f);
+
+        super.onCast(level, spellLevel, entity, castSource, playerMagicData);
+    }
+
+    private void zapEntitiesBetween(LivingEntity caster, int spellLevel, Vec3 blockEnd) {
+        Vec3 start = caster.getEyePosition();
+        Vec3 end = blockEnd.add(0, caster.getEyeHeight(), 0);
+        AABB range = caster.getBoundingBox().expandTowards(end.subtract(start));
+        List<? extends Entity> entities = caster.level().getEntities(caster, range);
+        for (Entity target : entities) {
+            Vec3 height = new Vec3(0, caster.getEyeHeight(), 0);
+            if (Utils.checkEntityIntersecting(target, start, end, 1f).getType() != HitResult.Type.MISS || Utils.checkEntityIntersecting(target, start.subtract(height), end.subtract(height), 1f).getType() != HitResult.Type.MISS) {
+                DamageSources.applyDamage(target, getDamage(spellLevel, caster), this.getDamageSource(caster));
+            }
+        }
+    }
+
+    private float getDistance(int spellLevel, LivingEntity sourceEntity) {
+        return getSpellPower(spellLevel, sourceEntity);
+    }
+
+    private float getDamage(int spellLevel, LivingEntity sourceEntity) {
+        float base = SpellConfig.ThunderStep.getBaseDamage();
+        float perLevel = SpellConfig.ThunderStep.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(sourceEntity);
+    }
+}

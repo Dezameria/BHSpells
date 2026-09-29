@@ -1,6 +1,7 @@
 package net.offkung.bhspells.mixin.client;
 
 import net.minecraft.world.entity.Entity;
+import net.offkung.bhspells.client.event.ArtOfTruthClientHandler;
 import net.offkung.bhspells.client.event.BlessingSnowClientHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,6 +18,8 @@ public abstract class EntityMixin {
     private void bhspells$blessingSnowGlowColor(CallbackInfoReturnable<Integer> cir) {
         if (BlessingSnowClientHandler.isTargetGlowingForCaster((Entity) (Object) this)) {
             cir.setReturnValue(0x55FFFF);
+        } else if (ArtOfTruthClientHandler.isTargetGlowingForCaster((Entity) (Object) this)) {
+            cir.setReturnValue(ArtOfTruthClientHandler.GLOW_COLOR);
         }
     }
 

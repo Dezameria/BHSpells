@@ -91,6 +91,11 @@ public class HeavenLionSpell extends AbstractSpell {
     }
 
     @Override
+    public boolean canBeInterrupted(Player player) {
+        return false;
+    }
+
+    @Override
     public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource, MagicData playerMagicData) {
         super.onCast(level, spellLevel, entity, castSource, playerMagicData);
         if (!level.isClientSide) {

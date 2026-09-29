@@ -193,7 +193,7 @@ dependencies {
 
     implementation fg.deobf("maven.modrinth:vu3NZ5Ma:KEBfkBat")
 
-    implementation fg.deobf("net.offkung:bhweapons:0.3.4")
+    implementation fg.deobf("net.offkung:bhweapons:0.3.6")
     implementation fg.deobf("maven.modrinth:ttzcrj0w:YWO7OcvC")
 
     implementation fg.deobf("curse.maven:epicfight-zylob-1299983:7634485")
@@ -205,6 +205,9 @@ dependencies {
     implementation fg.deobf("curse.maven:epic-fight-wukong-moveset-compact-unofficial-port-1669141:8739029")
 
     implementation fg.deobf("maven.modrinth:uXXizFIs:DG5Fn9Sz")
+    implementation fg.deobf("maven.modrinth:h7YaLrkk:XgFoh4Su")
+
+    implementation fg.deobf("maven.modrinth:NfYqagMx:XC2kXPPd")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }

@@ -1,5 +1,6 @@
 package net.offkung.bhspells.client.event;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -72,5 +73,10 @@ public class SwordDashClientHandler {
         if (closest != null) {
             PacketHandler.INSTANCE.sendToServer(new SwordDashPacket(closest.getId()));
         }
+    }
+
+    public static boolean isSwordGlowing(PetalWaltzSword sword, int ownerId) {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.player != null && mc.player.getId() == ownerId;
     }
 }

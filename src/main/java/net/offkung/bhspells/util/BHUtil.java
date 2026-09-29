@@ -3,10 +3,13 @@ package net.offkung.bhspells.util;
 import com.gametechbc.traveloptics.init.TravelopticsParticles;
 import com.github.L_Ender.cataclysm.client.particle.LightningParticle;
 import com.github.alexmodguy.alexscaves.client.particle.ACParticleRegistry;
+import io.redspace.ironsspellbooks.api.util.Utils;
 import io.redspace.ironsspellbooks.capabilities.magic.MagicManager;
 import io.redspace.ironsspellbooks.damage.DamageSources;
 import io.redspace.ironsspellbooks.registries.SoundRegistry;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.offkung.bhspells.client.particle.AmethystShardParticleOption;
+import net.offkung.bhspells.client.particle.CustomZapParticleOption;
 import net.offkung.bhspells.registry.ParticleRegistry;
 import net.minecraft.core.particles.DustColorTransitionOptions;
 import net.minecraft.core.particles.ParticleOptions;
@@ -27,6 +30,8 @@ import java.util.List;
 import java.util.Set;
 
 public class BHUtil {
+    private static final Vector3f SHARD_TINT = new Vector3f(0.68f, 0.45f, 0.95f);
+
     public static boolean isAlly(LivingEntity owner, LivingEntity target) {
         return owner.getTeam() != null && owner.getTeam().isAlliedTo(target.getTeam());
     }
@@ -143,6 +148,24 @@ public class BHUtil {
             double toZ = Mth.sin(angle) * 1.2F;
             level.sendParticles(particle, entity.getX() + ox, entity.getY() + oy, entity.getZ() + oz, 0, toX, toY, toZ, 1.0);
         }
+    }
+
+    public static void spawnRedZapAura(ServerLevel level, LivingEntity entity, Vector3f color, int count, float radius) {
+        Vec3 start = entity.getBoundingBox().getCenter();
+        level.getEntities(entity, entity.getBoundingBox().inflate(radius, radius, radius), (target) -> !DamageSources.isFriendlyFireBetween(target, entity) && Utils.hasLineOfSight(level, entity, target, true)).forEach(target -> {
+            if (target instanceof LivingEntity livingEntity && livingEntity.distanceToSqr(entity) < radius * radius) {
+                Vec3 dest = livingEntity.getBoundingBox().getCenter();
+                level.sendParticles(new CustomZapParticleOption(dest, color), start.x, start.y, start.z, 1, 0, 0, 0, 0);
+            }
+        });
+        for (int i = 0; i < count; i++) {
+            Vec3 dest = Utils.getRandomVec3(1).add(0, 0.75, 0).scale(radius).multiply(0.75f, 0.25f, 0.75f).add(start);
+            level.sendParticles(new CustomZapParticleOption(dest, color), start.x, start.y, start.z, 1, 0, 0, 0, 0);
+        }
+    }
+
+    public static void spawnRedZapAura(ServerLevel level, LivingEntity entity, Vector3f color, int count) {
+        spawnRedZapAura(level, entity, color, count, 23.0f);
     }
 
     public static void createHexagramParticle(ParticleOptions particleOptions, ServerLevel level, Vec3 center, float interval, float radius, float yRot) {
@@ -341,5 +364,17 @@ public class BHUtil {
 
             MagicManager.spawnParticles(level, ParticleRegistry.SPLATTER_SAKURA.get(), px, py, pz, 0, vx, vy, vz, 1.0, false);
         }
+    }
+
+    public static void spawnBurst(ServerLevel level, double x, double y, double z, double dx, double dy, double dz, int shardCount, int moteCount) {
+        AmethystShardParticleOption shard = new AmethystShardParticleOption(SHARD_TINT);
+        level.sendParticles(shard, x, y, z, shardCount, dx, dy, dz, 1.0);
+        level.sendParticles(ParticleTypes.WITCH, x, y, z, moteCount, 0.2, 0.1, 0.2, 0.01);
+    }
+
+    public static void spawnAmbient(ServerLevel level, double x, double y, double z, int shardCount, int moteCount) {
+        AmethystShardParticleOption shard = new AmethystShardParticleOption(SHARD_TINT);
+        level.sendParticles(shard, x, y, z, shardCount, 0.05, 0.05, 0.05, 0.005);
+        level.sendParticles(ParticleTypes.WITCH, x, y, z, moteCount, 0.1, 0.08, 0.1, 0.005);
     }
 }

@@ -20,6 +20,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
@@ -93,6 +94,11 @@ public class EternalPurificationSpell extends AbstractSpell {
     @Override
     public AnimationHolder getCastFinishAnimation() {
         return BHSpellAnimations.PURIFICATION_PILLAR_CAST;
+    }
+
+    @Override
+    public boolean canBeInterrupted(Player player) {
+        return false;
     }
 
     @Override

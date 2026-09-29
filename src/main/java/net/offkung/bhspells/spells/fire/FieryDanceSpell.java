@@ -12,18 +12,31 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.LivingKnockBackEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.offkung.bhspells.BHSpells;
 import net.offkung.bhspells.entity.spells.fiery_dance.GoldenMarbleEntity;
 import net.offkung.bhspells.event.GoldenMarbleManager;
+import org.jetbrains.annotations.Nullable;
+import yesman.epicfight.api.forgeevent.EntityStunEvent;
+import yesman.epicfight.world.effect.EpicFightMobEffects;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class FieryDanceSpell extends AbstractSpell {
-    private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(BHSpells.MODID, "fiery_dance");
+    public static final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(BHSpells.MODID, "fiery_dance");
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
@@ -38,6 +51,14 @@ public class FieryDanceSpell extends AbstractSpell {
         this.spellPowerPerLevel = 0;
         this.castTime = 16;
         this.baseManaCost = 40;
+    }
+
+    public static boolean isCasting(LivingEntity entity) {
+        if (entity == null) {
+            return false;
+        }
+        MagicData magicData = MagicData.getPlayerMagicData(entity);
+        return magicData != null && magicData.isCasting() && spellId.toString().equals(magicData.getCastingSpellId());
     }
 
     @Override
@@ -63,6 +84,35 @@ public class FieryDanceSpell extends AbstractSpell {
     @Override
     public Optional<SoundEvent> getCastFinishSound() {
         return Optional.of(SoundEvents.FIRE_EXTINGUISH);
+    }
+
+    @Override
+    public boolean canBeInterrupted(@Nullable Player player) {
+        return false;
+    }
+
+    @Override
+    public void onServerPreCast(Level level, int spellLevel, LivingEntity entity, @Nullable MagicData playerMagicData) {
+        super.onServerPreCast(level, spellLevel, entity, playerMagicData);
+        if (!level.isClientSide) {
+            entity.addEffect(new MobEffectInstance(EpicFightMobEffects.STUN_IMMUNITY.get(), getCastTime(spellLevel) + 10, 0, false, false, false));
+        }
+    }
+
+    @Override
+    public void onServerCastTick(Level level, int spellLevel, LivingEntity entity, @Nullable MagicData playerMagicData) {
+        super.onServerCastTick(level, spellLevel, entity, playerMagicData);
+        if (!level.isClientSide && !entity.hasEffect(EpicFightMobEffects.STUN_IMMUNITY.get())) {
+            entity.addEffect(new MobEffectInstance(EpicFightMobEffects.STUN_IMMUNITY.get(), 10, 0, false, false, false));
+        }
+    }
+
+    @Override
+    public void onServerCastComplete(Level level, int spellLevel, LivingEntity entity, MagicData playerMagicData, boolean cancelled) {
+        if (!level.isClientSide) {
+            entity.removeEffect(EpicFightMobEffects.STUN_IMMUNITY.get());
+        }
+        super.onServerCastComplete(level, spellLevel, entity, playerMagicData, cancelled);
     }
 
     @Override
@@ -98,5 +148,59 @@ public class FieryDanceSpell extends AbstractSpell {
     @Override
     public AnimationHolder getCastFinishAnimation() {
         return SpellAnimations.CAST_T_POSE;
+    }
+
+    @Mod.EventBusSubscriber(modid = BHSpells.MODID)
+    public static class FieryDanceEvents {
+        @SubscribeEvent(priority = EventPriority.HIGHEST)
+        public static void onLivingAttack(LivingAttackEvent event) {
+            LivingEntity target = event.getEntity();
+            if (isCasting(target)) {
+                if (event.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+                    return;
+                }
+                event.setCanceled(true);
+            }
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGHEST)
+        public static void onLivingHurt(LivingHurtEvent event) {
+            LivingEntity target = event.getEntity();
+            if (isCasting(target)) {
+                if (event.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+                    return;
+                }
+                event.setCanceled(true);
+                event.setAmount(0.0F);
+            }
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGHEST)
+        public static void onLivingDamage(LivingDamageEvent event) {
+            LivingEntity target = event.getEntity();
+            if (isCasting(target)) {
+                if (event.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+                    return;
+                }
+                event.setCanceled(true);
+                event.setAmount(0.0F);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onEntityStun(EntityStunEvent event) {
+            LivingEntity target = event.getStunnedEntityPatch().getOriginal();
+            if (isCasting(target)) {
+                event.setCanceled(true);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onLivingKnockBack(LivingKnockBackEvent event) {
+            LivingEntity target = event.getEntity();
+            if (isCasting(target)) {
+                event.setCanceled(true);
+            }
+        }
     }
 }

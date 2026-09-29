@@ -7,10 +7,14 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
+import net.offkung.bhspells.compat.CompatBootstrap;
+import net.offkung.bhspells.config.SpellConfig;
 import net.offkung.bhspells.entity.spells.golden_cloud.GoldenCloudEntity;
 import net.offkung.bhspells.event.*;
 import net.offkung.bhspells.event.entity.BypassDamageEvent;
@@ -30,13 +34,19 @@ public class BHSpells {
     public BHSpells(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
         modEventBus.addListener(this::commonSetup);
-        MobEffectsRegistry.MOB_EFFECTS.register(modEventBus);
+
+        MobEffectsRegistry.register(modEventBus);
         BHSoundRegistry.register(modEventBus);
         EntityRegistry.register(modEventBus);
         BHSpellRegistry.register(modEventBus);
         ParticleRegistry.register(modEventBus);
         AttributeRegistry.register(modEventBus);
         BHSchoolRegistry.register(modEventBus);
+        ItemRegistry.register(modEventBus);
+        BHSpellsTabRegistry.register(modEventBus);
+        CompatBootstrap.init(modEventBus);
+        context.registerConfig(ModConfig.Type.SERVER, SpellConfig.SPEC, "bhspells-server.toml");
+
         MinecraftForge.EVENT_BUS.register(this);
     }
 

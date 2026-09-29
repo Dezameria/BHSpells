@@ -13,6 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 import net.offkung.bhspells.BHSpells;
+import net.offkung.bhspells.entity.spells.crimson_thornbind.CrimsonRootEntity;
 import net.offkung.bhspells.entity.spells.golden_cloud.GoldenCloudEntity;
 
 @Mod.EventBusSubscriber(modid = BHSpells.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -45,5 +46,6 @@ public class AttributeRegistry {
     @SubscribeEvent
     public static void onAttributeCreate(EntityAttributeCreationEvent event) {
         event.put(EntityRegistry.GOLDEN_CLOUD.get(), GoldenCloudEntity.createAttributes().build());
+        event.put(EntityRegistry.CRIMSON_ROOT.get(), CrimsonRootEntity.createAttributes().build());
     }
 }

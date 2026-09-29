@@ -17,6 +17,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.offkung.bhspells.BHSpells;
@@ -73,6 +74,11 @@ public class ThousandArrowsSpell extends AbstractSpell {
     @Override
     public Optional<SoundEvent> getCastFinishSound() {
         return Optional.of(SoundEvents.EVOKER_CAST_SPELL);
+    }
+
+    @Override
+    public boolean canBeInterrupted(Player player) {
+        return false;
     }
 
     @Override

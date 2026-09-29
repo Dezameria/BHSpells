@@ -17,6 +17,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -81,6 +82,11 @@ public class ShiningRadiantSpell extends AbstractSpell {
     }
 
     @Override
+    public boolean canBeInterrupted(Player player) {
+        return false;
+    }
+
+    @Override
     public void onClientCast(Level level, int spellLevel, LivingEntity entity, ICastData castData) {
         super.onClientCast(level, spellLevel, entity, castData);
         entity.setYBodyRot(entity.getYRot());
@@ -114,12 +120,12 @@ public class ShiningRadiantSpell extends AbstractSpell {
             }
         }
 
-        //Spawning crystals in a forward-facing half-circle around the caster, sweeping from the caster's left to right
-        float damage =  getDamage(spellLevel, entity);
+        //Spawning crystals in a full circle around the caster, sweeping all the way around
+        float damage = getDamage(spellLevel, entity);
         float minScale = 1.0f;
         float maxScale = 3.0f;
-        int crystalCount = 15;
-        float arcRadius = 3.0f;
+        int crystalCount = 24;
+        float arcRadius = 4.5f;
         Vec3 center = entity.position();
         int spawnIndex = 0;
 
@@ -127,16 +133,15 @@ public class ShiningRadiantSpell extends AbstractSpell {
         int crystalRestTime = RadiantFieldAoe.LIFETIME_TICKS - RadiantCrystalEntity.RISE_TIME - RadiantCrystalEntity.LOWER_TIME;
 
         for (int i = 0; i < crystalCount; i++) {
-            float t = crystalCount > 1 ? i / (float) (crystalCount - 1) : 0.5f;
-            //+90deg points to the caster's left, -90deg to the caster's right, so we sweep left -> right
-            float angle = Mth.lerp(t, Mth.PI * 0.5f, -Mth.PI * 0.5f);
+            float t = i / (float) crystalCount;
+            float angle = t * Mth.TWO_PI;
             Vec3 dir = forward.yRot(angle).normalize();
             Vec3 anchor = center.add(dir.scale(arcRadius));
 
-            //biggest crystals at the far left/right edges of the arc, smallest toward the middle
-            float edge = Math.abs(t - 0.5f) * 2f;
+            //big crystal clusters spaced evenly around the ring, smaller crystals between them
+            float edge = (Mth.sin(angle * 3f) + 1f) * 0.5f;
             float scale = Mth.lerp(edge, minScale, maxScale);
-            boolean isBiggestCrystal = i == 0 || i == crystalCount - 1;
+            boolean isBiggestCrystal = i % (crystalCount / 3) == 0;
             if (isBiggestCrystal) {
                 scale = maxScale * 1.2f;
             }
@@ -167,9 +172,7 @@ public class ShiningRadiantSpell extends AbstractSpell {
                     crystal.moveTo(spawn);
                     crystal.setWaitTime(delay);
                     crystal.setRestTime(crystalRestTime);
-                    //edge crystals deal 75% dmg, main arc crystals 30%, scattered cluster crystals 15%
-                    float dmgMul = isBiggestCrystal ? 0.75f : (isMain ? 0.3f : 0.15f);
-                    crystal.setDamage(damage * dmgMul);
+                    crystal.setDamage(damage);
                     //face the crystal outward from the caster, with a little jitter
                     crystal.setYRot((float) (-Mth.atan2(dir.x, dir.z) * (180f / Math.PI)) + Utils.random.nextIntBetweenInclusive(-25, 25));
                     crystal.setXRot(Utils.random.nextIntBetweenInclusive(-15, 15));
