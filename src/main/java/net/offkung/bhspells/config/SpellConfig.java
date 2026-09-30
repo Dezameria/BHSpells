@@ -1,6 +1,11 @@
 package net.offkung.bhspells.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.offkung.bhspells.spells.evocation.DingShenFaSpell;
+import net.offkung.bhspells.spells.gold.SavageBiteSpell;
+import net.offkung.bhspells.spells.ground.EarthRoarSpell;
+import net.offkung.bhspells.spells.ground.ShockingSpell;
+
 import net.offkung.bhspells.spells.aqua.CrimsonRainBathesMoonSpell;
 import net.offkung.bhspells.spells.aqua.GlacialFirmamentSpell;
 import net.offkung.bhspells.spells.aqua.GlacialVeilSpell;
@@ -694,6 +699,278 @@ public class SpellConfig {
         }
     }
 
+    // ==========================================
+    // EVOCATION SCHOOL
+    // ==========================================
+    public static class DingShenFa {
+        public static ForgeConfigSpec.IntValue baseMana;
+        public static ForgeConfigSpec.IntValue manaPerLevel;
+        public static ForgeConfigSpec.DoubleValue cooldown;
+        public static ForgeConfigSpec.DoubleValue multiTargetRadius;
+
+        public static int getBaseMana() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : DingShenFaSpell.BASE_MANA_COST;
+        }
+
+        public static int getManaPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? manaPerLevel.get() : DingShenFaSpell.MANA_COST_PER_LEVEL;
+        }
+
+        public static double getCooldown() {
+            return (SPEC != null && SPEC.isLoaded()) ? cooldown.get() : DingShenFaSpell.COOLDOWN_SECONDS;
+        }
+
+        public static double getMultiTargetRadius() {
+            return (SPEC != null && SPEC.isLoaded()) ? multiTargetRadius.get() : 0.0D;
+        }
+    }
+
+    public static class PhantomDodge {
+        public static ForgeConfigSpec.IntValue baseMana;
+        public static ForgeConfigSpec.IntValue manaPerLevel;
+        public static ForgeConfigSpec.DoubleValue cooldown;
+        public static ForgeConfigSpec.IntValue baseDuration;
+        public static ForgeConfigSpec.IntValue durationPerLevel;
+        public static ForgeConfigSpec.IntValue baseCharges;
+        public static ForgeConfigSpec.IntValue chargesPerLevel;
+
+        public static int getBaseMana() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : net.offkung.bhspells.spells.evocation.PhantomDodgeSpell.BASE_MANA_COST;
+        }
+
+        public static int getManaPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? manaPerLevel.get() : net.offkung.bhspells.spells.evocation.PhantomDodgeSpell.MANA_COST_PER_LEVEL;
+        }
+
+        public static double getCooldown() {
+            return (SPEC != null && SPEC.isLoaded()) ? cooldown.get() : net.offkung.bhspells.spells.evocation.PhantomDodgeSpell.COOLDOWN_SECONDS;
+        }
+
+        public static int getBaseDuration() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseDuration.get() : net.offkung.bhspells.spells.evocation.PhantomDodgeSpell.BASE_DURATION_TICKS;
+        }
+
+        public static int getDurationPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? durationPerLevel.get() : net.offkung.bhspells.spells.evocation.PhantomDodgeSpell.DURATION_PER_LEVEL;
+        }
+
+        public static int getBaseCharges() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseCharges.get() : net.offkung.bhspells.spells.evocation.PhantomDodgeSpell.BASE_CHARGES;
+        }
+
+        public static int getChargesPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? chargesPerLevel.get() : net.offkung.bhspells.spells.evocation.PhantomDodgeSpell.CHARGES_PER_LEVEL;
+        }
+    }
+
+    public static class SpiritualPressure {
+        public static ForgeConfigSpec.IntValue baseMana;
+        public static ForgeConfigSpec.IntValue manaPerLevel;
+        public static ForgeConfigSpec.DoubleValue cooldown;
+        public static ForgeConfigSpec.DoubleValue baseRadius;
+        public static ForgeConfigSpec.DoubleValue radiusPerLevel;
+        public static ForgeConfigSpec.IntValue globalStreakBudget;
+        public static ForgeConfigSpec.IntValue durationTicks;
+
+        public static int getBaseMana() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : 75;
+        }
+
+        public static int getManaPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? manaPerLevel.get() : 15;
+        }
+
+        public static double getCooldown() {
+            return (SPEC != null && SPEC.isLoaded()) ? cooldown.get() : 35.0D;
+        }
+
+        public static float getBaseRadius() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseRadius.get().floatValue() : 12.0F;
+        }
+
+        public static float getRadiusPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? radiusPerLevel.get().floatValue() : 2.0F;
+        }
+
+        public static int getGlobalStreakBudget() {
+            return (SPEC != null && SPEC.isLoaded()) ? globalStreakBudget.get() : 256;
+        }
+
+        public static int getDurationTicks() {
+            return (SPEC != null && SPEC.isLoaded()) ? durationTicks.get() : 300;
+        }
+    }
+
+    public static class SavageBite {
+        public static ForgeConfigSpec.DoubleValue baseDamage;
+        public static ForgeConfigSpec.IntValue baseMana;
+        public static ForgeConfigSpec.IntValue manaDrainPerSecond;
+        public static ForgeConfigSpec.DoubleValue cooldown;
+        public static ForgeConfigSpec.DoubleValue range;
+
+        public static float getBaseDamage() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseDamage.get().floatValue() : SavageBiteSpell.BASE_DAMAGE;
+        }
+
+        public static int getBaseMana() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : SavageBiteSpell.BASE_MANA_COST;
+        }
+
+        public static int getManaDrainPerSecond() {
+            return (SPEC != null && SPEC.isLoaded()) ? manaDrainPerSecond.get() : SavageBiteSpell.MANA_DRAIN_PER_SECOND;
+        }
+
+        public static double getCooldown() {
+            return (SPEC != null && SPEC.isLoaded()) ? cooldown.get() : SavageBiteSpell.COOLDOWN_SECONDS;
+        }
+
+        public static double getRange() {
+            return (SPEC != null && SPEC.isLoaded()) ? range.get() : SavageBiteSpell.RANGE;
+        }
+    }
+
+    public static class EarthRoar {
+        public static ForgeConfigSpec.DoubleValue baseDamage;
+        public static ForgeConfigSpec.DoubleValue damagePerLevel;
+        public static ForgeConfigSpec.IntValue baseMana;
+        public static ForgeConfigSpec.IntValue manaPerLevel;
+        public static ForgeConfigSpec.DoubleValue cooldown;
+
+        public static float getBaseDamage() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseDamage.get().floatValue() : EarthRoarSpell.BASE_DAMAGE;
+        }
+
+        public static float getDamagePerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? damagePerLevel.get().floatValue() : EarthRoarSpell.DAMAGE_PER_LEVEL;
+        }
+
+        public static int getBaseMana() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : EarthRoarSpell.BASE_MANA_COST;
+        }
+
+        public static int getManaPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? manaPerLevel.get() : EarthRoarSpell.MANA_COST_PER_LEVEL;
+        }
+
+        public static double getCooldown() {
+            return (SPEC != null && SPEC.isLoaded()) ? cooldown.get() : EarthRoarSpell.COOLDOWN_SECONDS;
+        }
+    }
+
+    public static class Shocking {
+        public static ForgeConfigSpec.DoubleValue baseDamage;
+        public static ForgeConfigSpec.DoubleValue damagePerLevel;
+        public static ForgeConfigSpec.IntValue baseMana;
+        public static ForgeConfigSpec.IntValue manaPerLevel;
+        public static ForgeConfigSpec.DoubleValue cooldown;
+
+        public static float getBaseDamage() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseDamage.get().floatValue() : ShockingSpell.BASE_DAMAGE;
+        }
+
+        public static float getDamagePerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? damagePerLevel.get().floatValue() : ShockingSpell.DAMAGE_PER_LEVEL;
+        }
+
+        public static int getBaseMana() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : ShockingSpell.BASE_MANA_COST;
+        }
+
+        public static int getManaPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? manaPerLevel.get() : ShockingSpell.MANA_COST_PER_LEVEL;
+        }
+
+        public static double getCooldown() {
+            return (SPEC != null && SPEC.isLoaded()) ? cooldown.get() : ShockingSpell.COOLDOWN_SECONDS;
+        }
+    }
+
+    public static class VengefulPressure {
+        public static ForgeConfigSpec.IntValue baseMana;
+        public static ForgeConfigSpec.IntValue manaPerLevel;
+        public static ForgeConfigSpec.DoubleValue cooldown;
+        public static ForgeConfigSpec.DoubleValue baseRadius;
+        public static ForgeConfigSpec.DoubleValue radiusPerLevel;
+        public static ForgeConfigSpec.IntValue globalStreakBudget;
+
+        public static int getBaseMana() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : 75;
+        }
+
+        public static int getManaPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? manaPerLevel.get() : 15;
+        }
+
+        public static double getCooldown() {
+            return (SPEC != null && SPEC.isLoaded()) ? cooldown.get() : 40.0D;
+        }
+
+        public static float getBaseRadius() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseRadius.get().floatValue() : 16.0F;
+        }
+
+        public static float getRadiusPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? radiusPerLevel.get().floatValue() : 2.0F;
+        }
+
+        public static int getGlobalStreakBudget() {
+            return (SPEC != null && SPEC.isLoaded()) ? globalStreakBudget.get() : 120;
+        }
+    }
+
+    public static class TempestReiatsu {
+        public static ForgeConfigSpec.IntValue baseMana;
+        public static ForgeConfigSpec.IntValue manaPerLevel;
+        public static ForgeConfigSpec.DoubleValue cooldown;
+        public static ForgeConfigSpec.DoubleValue baseDamage;
+        public static ForgeConfigSpec.DoubleValue damagePerLevel;
+        public static ForgeConfigSpec.DoubleValue baseRadius;
+        public static ForgeConfigSpec.DoubleValue radiusPerLevel;
+        public static ForgeConfigSpec.IntValue strikeIntervalMin;
+        public static ForgeConfigSpec.IntValue strikeIntervalMax;
+        public static ForgeConfigSpec.IntValue globalStreakBudget;
+
+        public static int getBaseMana() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : 120;
+        }
+
+        public static int getManaPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? manaPerLevel.get() : 30;
+        }
+
+        public static double getCooldown() {
+            return (SPEC != null && SPEC.isLoaded()) ? cooldown.get() : 60.0D;
+        }
+
+        public static float getBaseDamage() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseDamage.get().floatValue() : 10.0F;
+        }
+
+        public static float getDamagePerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? damagePerLevel.get().floatValue() : 2.5F;
+        }
+
+        public static float getBaseRadius() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseRadius.get().floatValue() : 64.0F;
+        }
+
+        public static float getRadiusPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? radiusPerLevel.get().floatValue() : 14.0F;
+        }
+
+        public static int getStrikeIntervalMin() {
+            return (SPEC != null && SPEC.isLoaded()) ? strikeIntervalMin.get() : 10;
+        }
+
+        public static int getStrikeIntervalMax() {
+            return (SPEC != null && SPEC.isLoaded()) ? strikeIntervalMax.get() : 30;
+        }
+
+        public static int getGlobalStreakBudget() {
+            return (SPEC != null && SPEC.isLoaded()) ? globalStreakBudget.get() : 240;
+        }
+    }
+
     static {
         BUILDER.comment("IronSpell More Spell Tuning Configuration").push("spells");
 
@@ -884,7 +1161,82 @@ public class SpellConfig {
         GlacialFirmament.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 25.0D, 0.0D, 3600.0D);
         BUILDER.pop();
 
+        BUILDER.push("ding_shen_fa");
+        DingShenFa.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 120, 0, 10000);
+        DingShenFa.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 20, 0, 1000);
+        DingShenFa.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 30.0D, 0.0D, 3600.0D);
+        DingShenFa.multiTargetRadius = BUILDER.comment("AoE multi-target radius in blocks (0 to disable, single-target only)").defineInRange("multi_target_radius", 0.0D, 0.0D, 64.0D);
+        BUILDER.pop();
+
+        BUILDER.push("savage_bite");
+        SavageBite.baseDamage = BUILDER.comment("Periodic bite damage").defineInRange("base_damage", 6.0D, 0.0D, 10000.0D);
+        SavageBite.baseMana = BUILDER.comment("Initial mana cost to initiate lunge").defineInRange("base_mana", 50, 0, 10000);
+        SavageBite.manaDrainPerSecond = BUILDER.comment("Continuous mana drain per second while latched").defineInRange("mana_drain_per_sec", 15, 0, 10000);
+        SavageBite.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 25.0D, 0.0D, 3600.0D);
+        SavageBite.range = BUILDER.comment("Maximum lunge targeting range in blocks").defineInRange("range_blocks", 12.0D, 1.0D, 64.0D);
+        BUILDER.pop();
+
+        BUILDER.push("earth_roar");
+        EarthRoar.baseDamage = BUILDER.comment("Earth Roar impact base damage at Level 1").defineInRange("base_damage", 35.0D, 0.0D, 10000.0D);
+        EarthRoar.damagePerLevel = BUILDER.comment("Damage increase per level").defineInRange("damage_per_level", 5.0D, 0.0D, 1000.0D);
+        EarthRoar.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 150, 0, 10000);
+        EarthRoar.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 25, 0, 1000);
+        EarthRoar.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 120.0D, 0.0D, 3600.0D);
+        BUILDER.pop();
+
+        BUILDER.push("shocking");
+        Shocking.baseDamage = BUILDER.comment("Shocking beam base DPS at Level 1").defineInRange("base_damage", 8.0D, 0.0D, 10000.0D);
+        Shocking.damagePerLevel = BUILDER.comment("Damage increase per level").defineInRange("damage_per_level", 1.5D, 0.0D, 1000.0D);
+        Shocking.baseMana = BUILDER.comment("Continuous cast mana cost per second").defineInRange("base_mana", 30, 0, 10000);
+        Shocking.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 5, 0, 1000);
+        Shocking.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 15.0D, 0.0D, 3600.0D);
+        BUILDER.pop();
+
+        BUILDER.push("spiritual_pressure");
+        SpiritualPressure.baseMana = BUILDER.comment("Base mana cost to activate").defineInRange("base_mana", 75, 0, 10000);
+        SpiritualPressure.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 15, 0, 1000);
+        SpiritualPressure.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 35.0D, 0.0D, 3600.0D);
+        SpiritualPressure.baseRadius = BUILDER.comment("Base field radius in blocks").defineInRange("base_radius", 12.0D, 1.0D, 64.0D);
+        SpiritualPressure.radiusPerLevel = BUILDER.comment("Radius increase per level").defineInRange("radius_per_level", 2.0D, 0.0D, 32.0D);
+        SpiritualPressure.globalStreakBudget = BUILDER.comment("Global visual streak particle budget").defineInRange("global_streak_budget", 256, 16, 2048);
+        SpiritualPressure.durationTicks = BUILDER.comment("Field duration in ticks (20 ticks = 1 second)").defineInRange("duration_ticks", 300, 20, 7200);
+        BUILDER.pop();
+
+        BUILDER.push("vengeful_pressure");
+        VengefulPressure.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 75, 0, 10000);
+        VengefulPressure.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 15, 0, 1000);
+        VengefulPressure.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 40.0D, 0.0D, 3600.0D);
+        VengefulPressure.baseRadius = BUILDER.comment("Base radius in blocks").defineInRange("base_radius", 16.0D, 1.0D, 128.0D);
+        VengefulPressure.radiusPerLevel = BUILDER.comment("Radius increase per level").defineInRange("radius_per_level", 2.0D, 0.0D, 32.0D);
+        VengefulPressure.globalStreakBudget = BUILDER.comment("Global streak budget").defineInRange("global_streak_budget", 120, 0, 1000);
+        BUILDER.pop();
+
+        BUILDER.push("tempest_reiatsu");
+        TempestReiatsu.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 120, 0, 10000);
+        TempestReiatsu.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 30, 0, 1000);
+        TempestReiatsu.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 60.0D, 0.0D, 3600.0D);
+        TempestReiatsu.baseDamage = BUILDER.comment("Base strike damage").defineInRange("base_damage", 10.0D, 0.0D, 10000.0D);
+        TempestReiatsu.damagePerLevel = BUILDER.comment("Strike damage increase per level").defineInRange("damage_per_level", 2.5D, 0.0D, 1000.0D);
+        TempestReiatsu.baseRadius = BUILDER.comment("Base radius in blocks").defineInRange("base_radius", 64.0D, 1.0D, 256.0D);
+        TempestReiatsu.radiusPerLevel = BUILDER.comment("Radius increase per level").defineInRange("radius_per_level", 14.0D, 0.0D, 64.0D);
+        TempestReiatsu.strikeIntervalMin = BUILDER.comment("Min ticks between strikes").defineInRange("strike_interval_min", 10, 1, 200);
+        TempestReiatsu.strikeIntervalMax = BUILDER.comment("Max ticks between strikes").defineInRange("strike_interval_max", 30, 1, 400);
+        TempestReiatsu.globalStreakBudget = BUILDER.comment("Global streak budget").defineInRange("global_streak_budget", 240, 0, 2000);
+        BUILDER.pop();
+
+        // EVOCATION - PHANTOM DODGE
+        BUILDER.push("phantom_dodge");
+        PhantomDodge.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 50, 0, 10000);
+        PhantomDodge.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 0, 0, 1000);
+        PhantomDodge.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 50.0D, 0.0D, 3600.0D);
+        PhantomDodge.baseDuration = BUILDER.comment("Base duration in ticks (200 = 10s)").defineInRange("base_duration_ticks", 200, 20, 72000);
+        PhantomDodge.durationPerLevel = BUILDER.comment("Duration increase per level in ticks (100 = 5s)").defineInRange("duration_per_level_ticks", 100, 0, 72000);
+        PhantomDodge.baseCharges = BUILDER.comment("Base dodge charges").defineInRange("base_charges", 3, 1, 100);
+        PhantomDodge.chargesPerLevel = BUILDER.comment("Charges increase per level").defineInRange("charges_per_level", 2, 0, 100);
+        BUILDER.pop();
+
         BUILDER.pop(); // spells
         SPEC = BUILDER.build();
     }
 }
+

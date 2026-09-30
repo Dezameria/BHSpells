@@ -10,7 +10,17 @@
     "LiquidBlockMixin",
     "EntityCollisionMixin",
     "MixinGuardSkill",
-    "ForgeConfigSpecValueMixin"
+    "ForgeConfigSpecValueMixin",
+    "epicfight.DingAnimationPlayerMixin",
+    "epicfight.DingAttackAnimationMixin",
+    "epicfight.DingDynamicAnimationMixin",
+    "epicfight.DingLinkAnimationMixin",
+    "epicfight.DingLivingEntityPatchMixin",
+    "epicfight.DingMovementAnimationMixin",
+    "epicfight.DingPlayerPatchMixin",
+    "epicfight.DingServerAnimatorMixin",
+    "epicfight.DingSkillMixin",
+    "epicfight.DingStaticAnimationMixin"
   ],
   "client": [
     "client.EntityMixin",
@@ -21,7 +31,12 @@
     "client.MixinPatchedItemInHandLayer",
     "client.MixinPatchedLivingEntityRenderer",
     "client.MixinZylobTrailParticleProvider",
-    "client.MixinTargetAreaRenderer"
+    "client.MixinTargetAreaRenderer",
+    "client.DingLivingEntityRendererMixin",
+    "epicfight.DingAbstractClientPlayerPatchMixin",
+    "epicfight.DingClientAnimatorMixin",
+    "epicfight.DingLocalPlayerPatchMixin",
+    "epicfight.DingPatchedLivingEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

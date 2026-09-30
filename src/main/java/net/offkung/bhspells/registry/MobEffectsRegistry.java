@@ -83,7 +83,15 @@ public class MobEffectsRegistry {
     public static final RegistryObject<MobEffect> GALE_FALL_IMPACT = MOB_EFFECTS.register("gale_fall_impact", GaleFallImpactEffect::new);
     public static final RegistryObject<MobEffect> JADE_CLUSTER = MOB_EFFECTS.register("jade_cluster", () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0xFF8DA1){});
 
+        public static final RegistryObject<MobEffect> DING = MOB_EFFECTS.register("ding", () -> new DingEffect(MobEffectCategory.HARMFUL, 0xFFE082));
+    public static final RegistryObject<MobEffect> EARTH_ROAR_EMPOWERMENT = MOB_EFFECTS.register("earth_roar_empowerment", () -> new EarthRoarEmpowermentEffect(MobEffectCategory.BENEFICIAL, 0x8B5A2B));
+    public static final RegistryObject<MobEffect> EARTH_ROAR_STUN = MOB_EFFECTS.register("earth_roar_stun", () -> new EarthRoarStunEffect(MobEffectCategory.HARMFUL, 0x4A3728));
+    public static final RegistryObject<MobEffect> SHOCKING = MOB_EFFECTS.register("shocking", () -> new ShockingEffect(MobEffectCategory.HARMFUL, 0xFFD700));
+    public static final RegistryObject<MobEffect> SPIRITUAL_PRESSURE = MOB_EFFECTS.register("spiritual_pressure", () -> new SpiritualPressureEffect(MobEffectCategory.HARMFUL, 0x1A0033));
+    public static final RegistryObject<MobEffect> PHANTOM_DODGE = MOB_EFFECTS.register("phantom_dodge", () -> new net.offkung.bhspells.effect.PhantomDodgeEffect(MobEffectCategory.BENEFICIAL, 0x7EC8E3));
+
     public static void register(IEventBus modEventBus) {
         MOB_EFFECTS.register(modEventBus);
     }
 }
+

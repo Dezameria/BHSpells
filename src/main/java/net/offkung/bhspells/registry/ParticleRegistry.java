@@ -118,4 +118,11 @@ public class ParticleRegistry {
             return ShockwaveParticleOptionCustom.CODEC;
         }
     });
+    public static final Supplier<SimpleParticleType> DING = PARTICLE_TYPES.register("ding", () -> new SimpleParticleType(false));
+    public static final RegistryObject<ParticleType<ShockingBeamParticleOption>> SHOCKING_BEAM = PARTICLE_TYPES.register("shocking_beam", () -> new ParticleType<>(false, ShockingBeamParticleOption.DESERIALIZER) {
+        public Codec<ShockingBeamParticleOption> codec() {
+            return ShockingBeamParticleOption.CODEC;
+        }
+    });
+
 }

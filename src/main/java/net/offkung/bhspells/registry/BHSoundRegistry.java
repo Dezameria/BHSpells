@@ -11,6 +11,10 @@ import net.offkung.bhspells.BHSpells;
 public class BHSoundRegistry {
     private static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(Registries.SOUND_EVENT, BHSpells.MODID);
 
+        public static final RegistryObject<SoundEvent> XULI_DING_SOU = registerSoundEvent("xuli_ding_sou");
+    public static final RegistryObject<SoundEvent> FASHU_DING1 = registerSoundEvent("fashu_ding1");
+    public static final RegistryObject<SoundEvent> FASHU_DING2 = registerSoundEvent("fashu_ding2");
+
     public static void register(IEventBus eventBus) {
         SOUND_EVENTS.register(eventBus);
     }

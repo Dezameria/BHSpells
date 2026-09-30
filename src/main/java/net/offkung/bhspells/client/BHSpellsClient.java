@@ -203,5 +203,8 @@ public class BHSpellsClient {
         event.registerSpriteSet(ParticleRegistry.WHITE_FIRE_EMITTER.get(), WhiteFireEmitterParticle.Provider::new);
         event.registerSpriteSet(ParticleRegistry.RED_PLUM.get(), RedPlumParticle.Provider::new);
         event.registerSpriteSet(ParticleRegistry.GILDED_HARE.get(), GildedHareParticle.Provider::new);
+        event.registerSpriteSet(ParticleRegistry.DING.get(), net.offkung.bhspells.client.particle.DingEntityAfterImageParticle.Provider::new);
+        event.registerSpriteSet(ParticleRegistry.SHOCKING_BEAM.get(), net.offkung.bhspells.client.particle.ShockingBeamParticle.Provider::new);
+
     }
 }

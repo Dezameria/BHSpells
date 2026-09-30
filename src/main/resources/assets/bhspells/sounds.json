@@ -108,5 +108,20 @@
     "sounds": [
       "bhspells:dezameria/hymnofpurification"
     ]
+  },
+  "xuli_ding_sou": {
+    "sounds": [
+      "bhspells:dezameria/xuli_ding_sou"
+    ]
+  },
+  "fashu_ding1": {
+    "sounds": [
+      "bhspells:dezameria/fashu_ding1"
+    ]
+  },
+  "fashu_ding2": {
+    "sounds": [
+      "bhspells:dezameria/fashu_ding2"
+    ]
   }
 }

@@ -15,6 +15,8 @@ import net.offkung.bhspells.network.client.SyncTigershadeTargetPacket;
 import net.offkung.bhspells.network.server.ArtOfTruthTargetGlowSyncPacket;
 import net.offkung.bhspells.network.server.BlessingSnowTargetGlowSyncPacket;
 import net.offkung.bhspells.network.server.ScreenShakePacket;
+import net.offkung.bhspells.network.client.DingAfterImageParticlePacket;
+import net.minecraft.world.entity.LivingEntity;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
@@ -38,9 +40,14 @@ public class PacketHandler {
         INSTANCE.messageBuilder(ArtOfTruthTargetGlowSyncPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT).encoder(ArtOfTruthTargetGlowSyncPacket::encode).decoder(ArtOfTruthTargetGlowSyncPacket::new).consumerNetworkThread(ArtOfTruthTargetGlowSyncPacket::handle).add();
         INSTANCE.messageBuilder(SyncTigershadeTargetPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT).encoder(SyncTigershadeTargetPacket::encode).decoder(SyncTigershadeTargetPacket::decode).consumerNetworkThread(SyncTigershadeTargetPacket::handle).add();
         INSTANCE.messageBuilder(ExplodeJadeClusterPacket.class, index++, NetworkDirection.PLAY_TO_SERVER).encoder(ExplodeJadeClusterPacket::encode).decoder(ExplodeJadeClusterPacket::new).consumerNetworkThread(ExplodeJadeClusterPacket::handle).add();
+        INSTANCE.messageBuilder(DingAfterImageParticlePacket.class, index++, NetworkDirection.PLAY_TO_CLIENT).encoder(DingAfterImageParticlePacket::encode).decoder(DingAfterImageParticlePacket::decode).consumerNetworkThread(DingAfterImageParticlePacket::handle).add();
     }
 
     public static void syncTigerShadeTarget(ServerPlayer player, @Nullable UUID targetUuid) {
         INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new SyncTigershadeTargetPacket(targetUuid));
     }
+    public static void spawnDingAfterImage(LivingEntity target) {
+        INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> target), new DingAfterImageParticlePacket(target.getId()));
+    }
+
 }

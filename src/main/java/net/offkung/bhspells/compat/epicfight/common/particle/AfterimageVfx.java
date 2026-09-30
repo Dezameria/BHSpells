@@ -12,6 +12,20 @@ public final class AfterimageVfx {
         if (level == null || entity == null) {
             return;
         }
-        level.addParticle(EpicFightParticles.WHITE_AFTERIMAGE.get(), entity.getX(), entity.getY(), entity.getZ(), Double.longBitsToDouble(entity.getId()), 0.0D, 0.0D);
+        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            serverLevel.sendParticles(
+                EpicFightParticles.WHITE_AFTERIMAGE.get(),
+                entity.getX(), entity.getY(), entity.getZ(),
+                0,
+                Double.longBitsToDouble(entity.getId()), 0.0D, 0.0D,
+                1.0D
+            );
+        } else {
+            level.addParticle(
+                EpicFightParticles.WHITE_AFTERIMAGE.get(),
+                entity.getX(), entity.getY(), entity.getZ(),
+                Double.longBitsToDouble(entity.getId()), 0.0D, 0.0D
+            );
+        }
     }
 }

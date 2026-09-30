@@ -1,0 +1,90 @@
+# Resonant Knell
+
+## Core specification
+
+| Item | Current value |
+| --- | --- |
+| ตัวละคร | โม่ ซินซิน (Mo Xinxin) |
+| Registry ID | `bhspells:resonant_knell` |
+| Spell class | `spells/fire/ResonantKnellSpell.java` |
+| School | Fire |
+| Rarity | Epic |
+| Maximum level | 1 |
+| Cast type | Instant |
+| Cast time | 0 ticks |
+| Mana | 75 |
+| Recasts | 6 total casts across 3 open/blast cycles |
+| Recast window | 300 ticks (15 seconds) |
+| Cooldown effect | 600 ticks (30 seconds) |
+| Spawned entity | `bhspells:resonant_knell_dome` |
+| Base dome radius | 8 blocks |
+
+## Cast sequence
+
+1. The first cast creates an open dome centered on and following the caster.
+2. The second cast immediately damages and launches enemies within 15 blocks, then starts the first visual shockwave.
+3. The third cast reopens the dome at stage 2.
+4. The fourth cast immediately damages and launches enemies within 20 blocks, then starts the second visual shockwave.
+5. The fifth cast reopens the dome at stage 3.
+6. The sixth cast immediately damages and launches enemies within 30 blocks, starts the final visual shockwave, and applies cooldown.
+
+After each blast cast, the next recast is locked until the current 24-tick shockwave finishes. Rejected rapid inputs do not advance the recast sequence, replay sounds, or interrupt the expanding visual.
+
+The first, second, and final blasts deal 6, 10, and 16 direct spell damage respectively. Targets must be alive, hostile to the caster, not the caster, and not an armor stand. The horizontal and vertical launch strengths are `1.8/1.2`, `2.5/1.5`, and `3.8/2.0` respectively. Normal fall damage may occur after the launch.
+
+Each accepted cast refreshes Strength II, Resistance II, and Fire Resistance I on the caster and all allies within the 8-block barrier dome for 300 ticks. Furthermore, while the barrier dome is open (`STATE_OPEN`), any allies standing within its 8-block radius continuously receive and refresh these buffs every 10 ticks (lingering for 100 ticks upon leaving). Allies are resolved via `ResonantKnellSpell.isAlly()` (matching scoreboard teams, non-friendly-fire players, and tamed pets); allies are also exempt from blast damage and knockback. If the recast sequence expires or finishes, the cooldown effect is applied. A non-exploding dome is removed immediately; an exploding dome is marked for removal as soon as its current 24-tick shockwave completes.
+
+## Entity lifecycle and synchronization
+
+`ResonantKnellDomeAoe` stores its state, stage, shockwave start signal, and shockwave radius in synchronized entity data.
+
+- `STATE_OPEN`: follows the living caster and renders the open dome.
+- `STATE_EXPLODING`: renders for 24 ticks. Stages 1 and 2 then become inactive; stage 3 discards the entity.
+- `STATE_INACTIVE`: remains attached to the caster but renders nothing until the next open cast, provided the recast sequence is still active.
+- Active-dome lookup is restricted to the caster's exact `Level`, preventing an integrated client's copy from being selected by server spell logic. If stale duplicates exist on that same side, the newest entity is used. `ACTIVE_DOMES` uses a synchronized `WeakHashMap`-backed Set to guarantee zero memory leaks upon abrupt chunk/world unloads.
+- Starting a fresh sequence removes all same-level stale domes owned by that caster before the stage-1 dome is spawned.
+- When the recast sequence ends during a blast, every matching dome completes its current visual before being discarded instead of returning to an orphaned inactive state.
+- The entity is not saved and discards itself when it no longer has a living owner.
+- Gameplay damage and knockback happen immediately on the server when the blast cast is performed; the expanding shockwave is client-side visual feedback.
+
+## Client visuals
+
+`ResonantKnellDomeRenderer` uses full-bright additive geometry for the gold-red shell, plasma streaks, ground effects, spirit wisps, and shockwave. Taoist talismans use `textures/entity/resonant_knell/talisman.png` with an emissive translucent render type.
+
+While the dome is open:
+
+- Every time a stage opens, the shell, talismans, and spirit wisps begin at `0.22` scale and `1.4` blocks below the caster's feet, then rise and unfold over 12 ticks. A light ease-out overshoot prevents the opening from looking rigid, while alpha fades in over the first 6 ticks.
+- The perimeter sigil expands on the ground with the opening shell but remains anchored beneath the caster.
+- Four golden ground rings continuously contract from radius 7.6 to radius 0.45 beneath the caster over a 36-tick loop, visually gathering energy at the caster's feet.
+- Once fully open, the perimeter sigil remains at radius 8. Twenty-eight long golden energy ribbons begin around the lower shell, spiral in both directions along its curvature, cross over one another, and narrow into a bright convergence around the crown. Moving alpha pulses travel upward along each ribbon to make the energy visibly flow rather than appear as static bands. Twenty-two orbiting talismans and 16 spirit wisps supplement the dome.
+
+During each 24-tick blast:
+
+- The dome shell expands with cubic ease-out from radius 8 to the synchronized gameplay radius of 15, 20, or 30 blocks.
+- The leading ground shockwave begins at radius 0.35 beneath the caster and expands to the synchronized gameplay radius.
+- Three staggered echo rings also expand from beneath the caster to the same target radius and fade as they travel outward.
+- Talismans and spirit wisps scatter outward while the ground wall, blast rays, and ring alpha fade.
+
+The renderer stops drawing beyond 64 blocks from the entity center. Additional client particles are emitted around the open dome and throughout the blast.
+
+## Sounds and assets
+
+- Opening: bell and amethyst chime sounds.
+- Normal blasts: generic explosion and dragon fireball explosion sounds.
+- Final blast: lower-pitched explosion layers plus bell resonance.
+- Language keys: `spell.bhspells.resonant_knell`, `.guide`, `entity.bhspells.resonant_knell_dome`, `ui.bhspells.spell_on_cooldown`, and `ui.bhspells.resonant_knell_shockwave_active`.
+- Spell icon: `textures/gui/spell_icons/resonant_knell.png`.
+
+## Verification
+
+- Compile the main source set after renderer changes.
+- Verify that the 12-tick rise-and-unfold animation replays on stages 1, 2, and 3, including the light overshoot, while the ground effects remain anchored beneath the caster.
+- Verify that the 28 shell ribbons flow upward, overlap without obvious discontinuities, and converge brightly near the crown without excessive additive overexposure.
+- In game, verify the inward rings remain centered below a moving caster while the dome is open.
+- Verify all three blasts expand their ground rings to 15, 20, and 30 blocks respectively.
+- Verify stage transitions, recast expiry, and cooldown behavior across at least two complete sequences without reloading the world.
+- Rapidly press the spell during each blast and verify the recast count does not advance, no extra blast sound plays, and the ring completes its 24-tick expansion before the next open stage can start.
+- Let the recast window expire during a stage-1 or stage-2 blast and verify the ring finishes before the dome entity disappears without leaving an inactive visual or stale entity.
+- In integrated singleplayer, verify server casts never select the client-side mirror entity and that a new sequence removes any same-side stale dome.
+- Verify that gameplay damage remains immediate and is not delayed until the visual ring reaches a target.
+- Verify `ResonantKnellSpell.isAlly()` correctly recognizes teammates and non-friendly-fire players as allies (receiving buffs) and hostile players as enemies (taking blast damage without receiving dome buffs).

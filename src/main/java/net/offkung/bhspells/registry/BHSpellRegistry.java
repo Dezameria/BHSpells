@@ -13,11 +13,19 @@ import net.offkung.bhspells.spells.ground.*;
 import net.offkung.bhspells.spells.lightning.DivineThunderSpell;
 import net.offkung.bhspells.spells.lightning.LightningStrikeSpell;
 import net.offkung.bhspells.spells.lightning.ThunderStepSpell;
+import net.offkung.bhspells.spells.lightning.TempestReiatsuSpell;
 import net.offkung.bhspells.spells.lightning.UltraShockSpell;
 import net.offkung.bhspells.spells.nature.*;
+import net.offkung.bhspells.spells.evocation.*;
 
 public class BHSpellRegistry {
     public static final DeferredRegister<AbstractSpell> SPELLS = DeferredRegister.create(SpellRegistry.SPELL_REGISTRY_KEY, BHSpells.MODID);
+
+        // EVOCATION
+    public static final RegistryObject<AbstractSpell> DING_SHEN_FA = registerSpell(new DingShenFaSpell());
+    public static final RegistryObject<AbstractSpell> SPIRITUAL_PRESSURE = registerSpell(new SpiritualPressureSpell());
+    public static final RegistryObject<AbstractSpell> VENGEFUL_PRESSURE = registerSpell(new VengefulPressureSpell());
+    public static final RegistryObject<AbstractSpell> PHANTOM_DODGE = registerSpell(new PhantomDodgeSpell());
 
     // FIRE
     public static final RegistryObject<AbstractSpell> FIERY_DANCE = registerSpell(new FieryDanceSpell());
@@ -31,6 +39,7 @@ public class BHSpellRegistry {
     public static final RegistryObject<AbstractSpell> CRIMSON_THORNBIND = registerSpell(new CrimsonThornbindSpell());
 
     // LIGHTNING
+    public static final RegistryObject<AbstractSpell> TEMPEST_REIATSU = registerSpell(new TempestReiatsuSpell());
     public static final RegistryObject<AbstractSpell> LIGHTNING_STRIKE = registerSpell(new LightningStrikeSpell());
     public static final RegistryObject<AbstractSpell> THUNDER_STEP = registerSpell(new ThunderStepSpell());
 
@@ -48,6 +57,7 @@ public class BHSpellRegistry {
     public static final RegistryObject<AbstractSpell> TOXIC_SALVATION = registerSpell(new ToxicSalvationSpell());
 
     // GOLD
+    public static final RegistryObject<AbstractSpell> SAVAGE_BITE = registerSpell(new SavageBiteSpell());
     public static final RegistryObject<AbstractSpell> STONE_CRUMBLE = registerSpell(new StoneCrumbleSpell());
     public static final RegistryObject<AbstractSpell> THOUSAND_ARROWS = registerSpell(new ThousandArrowsSpell());
     public static final RegistryObject<AbstractSpell> SPIN_STRIKE = registerSpell(new SpinStrikeSpell());
@@ -65,6 +75,8 @@ public class BHSpellRegistry {
     public static final RegistryObject<AbstractSpell> JADE_CLUSTER = registerSpell(new JadeClusterSpell());
 
     // GROUND
+    public static final RegistryObject<AbstractSpell> EARTH_ROAR = registerSpell(new EarthRoarSpell());
+    public static final RegistryObject<AbstractSpell> SHOCKING = registerSpell(new ShockingSpell());
     public static final RegistryObject<AbstractSpell> DEMONIC_SPIN = registerSpell(new DemonicSpinSpell());
     public static final RegistryObject<AbstractSpell> FEET_STOMP = registerSpell(new FeetStompSpell());
     public static final RegistryObject<AbstractSpell> EMBRACING_BOSOM = registerSpell(new EmbracingBosomSpell());
@@ -95,3 +107,4 @@ public class BHSpellRegistry {
         SPELLS.register(eventBus);
     }
 }
+

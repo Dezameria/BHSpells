@@ -1,0 +1,265 @@
+# 🏗️ โครงสร้างระบบทั้งหมด (Overall System Architecture)
+
+เอกสารสรุปสถาปัตยกรรมโครงสร้างระบบของ Mod **BHSpells (BeeHouse Spells)** (Forge 1.20.1) การจัดหมวดหมู่คลาส ระบบรีจิสทรี และการเชื่อมต่อกับระบบภายนอก
+
+---
+
+## 1. แผนผังภาพรวมของระบบ (System Overview Diagram)
+
+```mermaid
+graph TB
+    subgraph "Core Mod: BHSpells"
+        ModMain[BHSpells.java]
+        EventBus[Forge Mod Event Bus]
+    end
+
+    subgraph "Registries (net.offkung.bhspells.registry)"
+        SpellReg[BHSpellRegistry]
+        SchoolReg[BHSchoolRegistry]
+        SoundReg[BHSoundRegistry]
+        EffectReg[MobEffectsRegistry]
+        ParticleReg[ParticleRegistry]
+        EntityReg[EntityRegistry]
+        ItemReg[ItemRegistry]
+        AttrReg[AttributeRegistry]
+    end
+
+    subgraph "Gameplay Logic"
+        Spells[Spells Layer: fire, lightning, nature, aqua, gold, ground, evocation]
+        Effects[Effects Layer: combat, movement, venom, cooldown, Tigershade, Ding]
+        Entities[Entities Layer: projectiles, persistent AoEs, control entities]
+        Pressure[Pressure Framework: field lifecycle, restrictions, network]
+    end
+
+    subgraph "Client Rendering (BHSpellsClient)"
+        ClientBus[Client Mod Bus]
+        ParticleProviders[Particle Providers: WhiteFire, RedPlum, Zap, Shockwave, Ding, ShockingBeam]
+        EntityRenderers[Entity Renderers: projectiles, ice, dome, Rapturous Bloom, Ding afterimage]
+        PressureClient[Pressure Field & Screen Post-Processor]
+    end
+
+    subgraph "External Integrations"
+        ISS[Iron's Spells 'n Spellbooks API]
+        EF[Epic Fight API: Combat animations, Colliders, Skills]
+        AAA[AAA Particles API: Effekseer Native VFX]
+        Gecko[GeckoLib / Player Animator]
+    end
+
+    ModMain --> EventBus
+    EventBus --> SpellReg
+    EventBus --> SchoolReg
+    EventBus --> SoundReg
+    EventBus --> EffectReg
+    EventBus --> ParticleReg
+    EventBus --> EntityReg
+    EventBus --> ItemReg
+    EventBus --> AttrReg
+
+    SpellReg --> Spells
+    EffectReg --> Effects
+    EntityReg --> Entities
+    Spells --> Pressure
+
+    ClientBus --> ParticleProviders
+    ClientBus --> EntityRenderers
+    ClientBus --> PressureClient
+
+    Spells -.-> ISS
+    Spells -.-> EF
+    Spells -.-> AAA
+    Entities -.-> Gecko
+```
+
+---
+
+## 2. โครงสร้างแพ็กเกจของโปรเจกต์ (Package Structure)
+
+```
+net.offkung.bhspells
+│
+├── BHSpells.java                      # จุดเริ่มต้นของ Mod (Main Entry Point)
+│
+├── client/                                 # renderer, particle provider และ client event
+│   ├── BHSpellsClient.java            # ลงทะเบียน particle, renderer และ model layer
+│   ├── event/                              # input/HUD/client lifecycle เช่น Tigershade, Ding, SavageBite
+│   ├── particle/                           # WhiteFire, RedPlum, Zap, Shockwave, Ding, ShockingBeam
+│   └── renderer/                           # renderer ที่แชร์หรือแยกจาก package ของ entity
+│
+├── compat/                                 # integration กับ Epic Fight, Avalon และ AAA Particles
+├── effect/                                 # MobEffect ของ combat, movement, venom, Tigershade, Ding, Roar
+├── entity/spells/                          # projectile, persistent AoE และ control entity ของแต่ละเวท
+├── event/                                  # server/gameplay lifecycle event
+├── network/                                # packet และ SimpleChannel เฉพาะระบบที่ต้อง sync เพิ่มเติม
+│
+├── pressure/                               # ระบบแรงดันวิญญาณส่วนกลาง (Spiritual Pressure Framework)
+│   ├── client/                             # Field renderer, streak pooling, screen post-processor
+│   ├── network/                            # PressureNetwork และ Sync Packets
+│   └── server/                             # Field controller, restrictions และ events
+│
+├── service/                                # Background gameplay services (Ding Shen Fa, etc.)
+│
+├── registry/                               # ระบบลงทะเบียน DeferredRegister
+│   ├── BHSpellRegistry.java                # ลงทะเบียนเวทมนตร์ทั้งหมด
+│   ├── BHSchoolRegistry.java               # ลงทะเบียนสายเวทเฉพาะของ BHSpells (Gold, Ground)
+│   ├── BHSoundRegistry.java                # ลงทะเบียน SoundEvent
+│   ├── MobEffectsRegistry.java             # ลงทะเบียนสถานะเอฟเฟกต์
+│   ├── ParticleRegistry.java               # ลงทะเบียน ParticleType
+│   ├── EntityRegistry.java                 # ลงทะเบียน EntityType
+│   ├── ItemRegistry.java                   # ลงทะเบียน Items
+│   ├── BHSpellsTabRegistry.java            # ลงทะเบียน Creative Tabs
+│   └── AttributeRegistry.java              # ลงทะเบียน Attributes
+│
+└── spells/                                 # โค้ดของเวทมนตร์แต่ละสาย
+    ├── fire/
+    ├── lightning/
+    ├── nature/
+    ├── aqua/
+    ├── gold/
+    ├── ground/
+    └── evocation/
+```
+
+---
+
+## 3. ระบบและเลเยอร์ที่สำคัญ (Core Subsystems)
+
+### 3.1 ระบบอนุภาคเพลิงขาว (White Flame Particle Ecosystem)
+ระบบเพลิงขาวถูกออกแบบมาเพื่อทดแทนไฟสีส้มของ Vanilla ให้เป็นธีมเพลิงขาวบริสุทธิ์:
+1. **`WHITE_FIRE` (`WhiteFireParticle`)**:
+   - ลูปอนิเมชั่น 8 เฟรมต่อเนื่อง (`white_fire_1` ถึง `white_fire_8`)
+   - ควบคุมการแสดงผลตามช่วงอายุ (`setSpriteFromAge`)
+   - มีระบบสุ่มพลิกด้านซ้าย-ขวา (`mirrored`) เพื่อความสมจริง
+   - เรนเดอร์ด้วยความสว่างสูงสุด (`LightTexture.FULL_BRIGHT`)
+2. **`WHITE_FIRE_EMITTER` (`WhiteFireEmitterParticle`)**:
+   - ทำงานแบบต่อเนื่อง (`animateContinuously`) สุ่มเฟรมไฟทุกๆ 4 Ticks
+   - มีระบบโปรยสะเก็ดไฟอัตโนมัติ: โอกาส 25% ในแต่ละ Tick ที่จะปล่อย `WHITE_EMBER` ทิ้งไว้ตามเส้นทางที่ไฟพุ่งผ่าน
+3. **`WHITE_EMBER` (`WhiteEmberParticle`)**:
+   - สะเก็ดไฟขนาดเล็ก มีแรงเสียดทานหน่วงการลอย (`friction = 0.85`) ให้ตกลงสู่พื้นใกล้จุดปล่อย
+4. **`WHITE_SPARKS` (`SparkParticleOptions`)**:
+   - ละอองประกายไฟเส้นสีขาวล้วน (`Vector3f(1.0, 1.0, 1.0)`) พุ่งกระจายความเร็วสูง
+5. **`RED_PLUM` (`RedPlumParticle`)**:
+   - กลีบดอกสีแดงแบบ full-bright ที่หมุน พลิ้ว และค่อย ๆ จาง ใช้ทั้งวงโคจรรอบ Rapturous Bloom และการระเบิดกลีบดอกในเฟสสุดท้าย
+
+---
+
+### 3.2 ระบบสถานะเผาไหม้สีขาว (`WhiteFlameBurnEffect`)
+* **การตัดไฟส้ม Vanilla**:
+  - เมื่อ Entity ติดสถานะนี้ ในทุก Tick ตัวระบบจะเรียก `entity.clearFire()` เพื่อลบล้าง `remainingFireTicks` ของ Minecraft
+  - ทำให้โมเดลของ Entity จะไม่มี Texture แผ่นไฟส้มของ Vanilla บดบัง
+* **พฤติกรรมการปล่อย Particle สองระดับ**:
+  - *ระดับปกติ*: มีเปลวไฟและสะเก็ดไฟลอยเอื่อยๆ รอบตัวในปริมาณน้อย ไม่บดบังทัศนวิสัย
+  - *ระดับดาเมจ (ทุก 1.0 วินาที)*: เกิด **Damage Flare Burst** ระเบิดเปลวไฟสีขาวและสะเก็ดไฟฟุ้งกระจายออกจากตัวศัตรูอย่างเด่นชัด
+* **การแสดงผล UI**:
+  - ปิดฟองอากาศวนรอบตัว (`visible = false`)
+  - แสดงไอคอนรูปเพลิงขาวใน HUD และช่องเก็บของ (`showIcon = true` ผ่านรูป `white_flame_burn.png`)
+
+---
+
+### 3.3 การผสานรวมกับโมดูลภายนอก (External Integrations)
+
+| โมดูล / ไลบรารี | บทบาทในโปรเจกต์ | ตัวอย่างการเรียกใช้งาน |
+| :--- | :--- | :--- |
+| **Iron's Spells 'n Spellbooks** | ระบบแกนกลางเวทมนตร์, มานา, การร่าย, Sound, Cooldown | `AbstractSpell`, `MagicData`, `SchoolRegistry`, `DamageSources` |
+| **Epic Fight** | อนิเมชั่นคอมแบท, ท่าทางคัสตอม, Hitbox Colliders, Ground Fractures | `EpicFightCompat`, `IronSpellAnimations`, `IronSpellColliders` |
+| **Epic Fight — Avalon** | เอฟเฟกต์การเขย่าจอ (Camera Shake) และคอมแบท VFX | `AvalonCompat`, `AvalonVfx` |
+| **AAA Particles (Effekseer)** | ตัวโหลดและแสดงผลเอฟเฟกต์ 3D Effekseer (`.efkefc`) | `AaaParticlesCompat`, `AAALevel.addParticle(...)` |
+| **GeckoLib & Player Animator** | เอนิเมชั่นโมเดลและการร่ายเวทของตัวละคร | `SpellAnimations`, `AnimationHolder` |
+
+> 📖 **รายละเอียดสถาปัตยกรรมชั้น Compatibility ฉบับเต็ม:** ดูได้ที่ [docs/compat_architecture.md](compat_architecture.md)
+
+
+---
+
+### 3.4 ระบบต่อสู้และแอนิเมชัน Epic Fight (Epic Fight Combat & Modular VFX Subsystem)
+
+ระบบเชื่อมต่อกับ Epic Fight ถูกปรับปรุงให้เป็นแบบ **Clean Modular Architecture (Codex Standard)**:
+
+1. **สถาปัตยกรรมแบบแยกส่วน (Modular Separation)**:
+   - **animation/**: แยกคลาส Builder ตามตระกูลอาวุธ/เวทมนตร์ เช่น MeenLanceAnimations สำหรับชุดหอก Meen ทำให้ IronSpellAnimations กลายเป็น Registry Orchestrator ที่สั้น กระชับ และเป็นระเบียบ
+   - **particle/ (VFX)**: แยกโมดูลแสดงผลภาพออกเป็น 3 หน่วยย่อย:
+     - WeaponAuraVfx: เรนเดอร์วงแหวนเวท 5 ชั้นที่พื้น, ประกายไฟและสายฟ้าวนรอบมือ/ตัวผู้เล่น, และเงาร่างติดตา (WHITE_AFTERIMAGE)
+     - FractureVfx: ตรวจจับพื้นแข็งเพื่อทำพื้นแตก (circleSlamFracture) ร่วมกับระบบสั่นหน้าจอ (CameraShakeManager)
+     - ShockwaveVfx: ปล่อยคลื่นไฟ 4 วงแหวนขยายตัว 10-18 บล็อก, ลาวาปะทุตรงกลาง, และเอฟเฟกต์ประกายฟันดาบด้านหน้า (FLASH + SWEEP_ATTACK)
+   - **collider/**: รวบรวม Hitbox OBB สำหรับคำนวณการโจมตีอย่างแม่นยำ
+
+2. **การปรับจังหวะให้สมบูรณ์ (Frame-Accurate Synchronization)**:
+   - ปรับแก้ปัญหา Desync ของคลื่นระเบิด ให้สอดคล้องกับเฟรมลงสู่พื้นของโมเดลกระดูกจริงที่วินาทีที่ **1.15s (เฟรม 70/60)**
+   - คำนวณความเร็วในการเล่น (PLAY_SPEED_MODIFIER) โดยกำหนดขอบเขต clamp(0.85F, 1.45F) ป้องกันปัญหาอนิเมชันเร่งเร็วผิดปกติ
+
+3. **คำสั่งควบคุมและทดสอบในเกม**:
+   - /ism test_meen_charge3: ทดสอบรันชุดแอนิเมชัน Meen Charge 3 พร้อม VFX, เสียง และพื้นแตกแบบครบวงจร
+   - /ism play_animation meen_charge_3: สั่งเล่นแอนิเมชันผ่านตัวถอดรหัส AnimationCue
+
+---
+
+## 4. สถานะสถาปัตยกรรมเวทปัจจุบัน
+
+`BHSpellRegistry` ลงทะเบียนเวททั้งหมดในม็อด โดยมีเวทมนตร์ 28 รายการที่จัดทำเอกสารข้อกำหนดเชิงลึกครอบคลุม 7 สายเวท (Fire, Lightning, Nature, Aqua, Gold, Ground, Evocation) ซิงก์กับ [all_spells.md](all_spells.md) และเอกสารแยกรายเวทใน [spells/README.md](spells/README.md)
+
+ระบบเวทปัจจุบันใช้ component หลักร่วมกันดังนี้:
+
+```text
+BHSpellRegistry
+  ├─ spell implementation
+  ├─ MobEffectsRegistry
+  ├─ EntityRegistry
+  ├─ ParticleRegistry
+  └─ client registration
+       ├─ entity renderer
+       ├─ particle provider
+       └─ model layer
+```
+
+Gameplay result เป็น server-authoritative ส่วน entity data, packet และ event ที่ sync จะส่ง state ขั้นต่ำมายัง client เพื่อแสดง renderer, particle, sound และ animation
+
+### 4.1 Resonant Knell subsystem
+
+Resonant Knell เชื่อม component ต่อไปนี้:
+
+| Component | หน้าที่ |
+| --- | --- |
+| `ResonantKnellSpell` | จัดการ recast 6 ครั้ง, buff, damage, launch, cooldown และคำสั่งเปลี่ยน state ของโดม |
+| `ResonantKnellDomeAoe` | ติดตาม owner และ sync state, stage, shockwave start/radius ระหว่าง server กับ client |
+| `ResonantKnellDomeRenderer` | สร้าง shell, talisman, spirit wisp, ground ring และ shockwave geometry ฝั่ง client |
+| `ResonantKnellDomeVisuals` | รวมค่าปรับแต่ง mesh, สี, alpha, opening motion, ring timing และระยะ render |
+| `BHSpellsClient` | ลงทะเบียน renderer ให้กับ `bhspells:resonant_knell_dome` |
+
+```text
+Cast/Recast on server
+  → update ResonantKnellDomeAoe synchronized data
+  → client observes STATE_OPEN or STATE_EXPLODING
+  → renderer starts local opening/shockwave timeline
+  → gameplay remains authoritative on server
+```
+
+ช่วงเปิดโดม renderer ใช้ motion 12 ticks จาก scale 0.22 และตำแหน่งต่ำกว่าเท้า 1.4 บล็อก พร้อม overshoot เบา ๆ โดยวงพื้นยังยึดกับเท้าผู้ร่าย ช่วงระเบิด shell และวงพื้นขยายตามรัศมี gameplay 15, 20 หรือ 30 บล็อกภายใน 24 ticks
+
+รายละเอียดเชิงพฤติกรรมและค่าปรับแต่งอยู่ที่ [Resonant Knell specification](spells/fire/resonant_knell.md)
+
+### 4.2 Rapturous Bloom subsystem
+
+Rapturous Bloom เชื่อม component ต่อไปนี้:
+
+| Component | หน้าที่ |
+| --- | --- |
+| `RapturousBloomSpell` | ตรวจเป้าหมาย ระยะ line of sight ตำแหน่งพื้น จำนวนดอกสูงสุด และพื้นที่ซ้อนทับก่อน spawn |
+| `RapturousBloomEntity` | คุม phase, radius, debuff รายวินาที, burst damage, anti-magic และ active-bloom tracking ฝั่ง server |
+| `RapturousBloomRenderer` / `RapturousBloomVisuals` | วาดดอกไม้แบบ procedural, ground sigil, bloom animation และ petal shatter ฝั่ง client |
+| `RedPlumParticle` | แสดงกลีบดอกแบบหมุน/พลิ้วระหว่าง lifecycle และกระจายออกในช่วง burst |
+| `BHSpellsClient` | ลงทะเบียน renderer และ particle provider ของ `rapturous_bloom` / `red_plum` |
+
+```text
+Server validates target and ground
+  → spawn RapturousBloomEntity and sync phase
+  → apply periodic debuffs during bloom
+  → resolve burst damage at tick 120
+  → client renders geometry and particles from synchronized state
+```
+
+รายละเอียด lifecycle และค่าทั้งหมดอยู่ที่ [Rapturous Bloom specification](spells/nature/rapturous_bloom.md)
+
+### 4.3 Tigershade target synchronization
+
+Tigershade Terrabreak เก็บผล combat และเงื่อนไข execute ไว้ฝั่ง server ส่วน `TigershadeNetwork` ส่ง `SyncTigershadeTargetPacket` เพื่อให้ client ทราบ target UUID ที่ต้องใช้กับ HUD/VFX เท่านั้น `TigershadeLifecycleEvents` ดูแลการล้าง state เมื่อ effect หมด ผู้เล่นตาย disconnect หรือเปลี่ยนมิติ เพื่อไม่ให้ target state ค้างข้าม lifecycle
+
+รายละเอียดพฤติกรรมอยู่ที่ [Tigershade Terrabreak specification](spells/ground/tigershade_terrabreak.md)

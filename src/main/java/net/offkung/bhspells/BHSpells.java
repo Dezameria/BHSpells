@@ -51,7 +51,11 @@ public class BHSpells {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        event.enqueueWork(PacketHandler::registerPackets);
+        event.enqueueWork(() -> {
+            PacketHandler.registerPackets();
+            net.offkung.bhspells.pressure.network.PressureNetwork.register();
+            net.offkung.bhspells.network.savage_bite.SavageBiteNetwork.register();
+        });
         LOGGER.info("BHSpells COMMON SETUP");
     }
 
