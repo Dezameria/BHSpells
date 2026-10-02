@@ -104,7 +104,14 @@ public class ServerPressureField {
 
     @Nullable
     public Entity getOwnerEntity() {
-        return level.getEntity(data.ownerUuid());
+        if (data.ownerUuid() == null) {
+            return null;
+        }
+        Entity entity = level.getEntity(data.ownerUuid());
+        if (entity == null) {
+            entity = level.getPlayerByUUID(data.ownerUuid());
+        }
+        return entity;
     }
 
     public Vec3 getCurrentCenter() {

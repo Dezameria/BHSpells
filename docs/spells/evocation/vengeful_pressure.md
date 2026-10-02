@@ -5,17 +5,18 @@
 | Spell id | `bhspells:vengeful_pressure` |
 | School / rarity / max level | Evocation / Legendary / 5 |
 | Spell cast type | Instant (Stance Toggle Domain Activation) |
-| Mana Cost | 100 (+25/level) on activation, 0 upkeep |
-| Cooldown | 45.0 seconds (triggered only upon closing the domain) |
+| Mana Cost | 40 (+15/level) on activation, 0 upkeep |
+| Cooldown | 40.0 seconds (triggered only upon closing the domain) |
 | Base Radius | 64.0 blocks (+14.0 blocks/level, reaching 120.0 blocks at Level 5) |
-| Architecture | Reusable `ServerPressureManager` + `ClientPressureManager` Torrential Curtain Framework |
+| Architecture | Reusable `ServerPressureManager` + `ClientPressureManager` Torrential Curtain Framework with `PressureReactionDispatcher` |
 | Visual Concept | Camera-Centric 360° Malice Green Torrential Deluge (`0x22FF55`) + Top/Bottom Surging Screen Energy Wash |
 
 ## System Overview & Architecture
 
 Vengeful Pressure operates as a colossal domain expansion (64 to 120 blocks):
-- **Stance Toggle Mode**: Casting once opens the domain around the caster. It remains active indefinitely with zero continuous mana drain until the caster casts again to close it, triggering a 45-second cooldown.
+- **Stance Toggle Mode**: Casting once opens the domain around the caster. It remains active indefinitely with zero continuous mana drain until the caster casts again to close it, triggering a 40-second cooldown.
 - **Server Gameplay Truth**: Evaluated every 5 ticks via spatial bounding box (`AABB`). Enforces severe debuffs on hostile and non-allied targets: `MobEffects.DARKNESS`, `MobEffects.WEAKNESS` II, armor shred (-4.0 armor modifier), attack damage drain (-3.0), server-authoritative jump lockout (`TAG_ROOTED`), and kneel/knockdown reactions.
+- **Decoupled Event Architecture**: Reactions are dispatched via `PressureReactionDispatcher` observer registry, completely decoupling server mechanics from external mod compatibility (Epic Fight).
 - **Client Torrential Curtain (Full 3D Heaven-to-Earth / ทั่วฟ้าดิน)**: Employs 3-tier camera-centric procedural streak generation across a 48-block cylindrical volume around the active viewer. Features sky condensation (falling from 20-48 blocks high in the heavens), mid-air atmospheric surges, and colossal sky-to-earth spiritual pillars (up to 38+ blocks tall) plunging downwards and compressing into the ground with high-speed texture streaming.
 - **Screen & Audio Presentation**: Animated top and bottom streaming energy waves, heavy vignette, breathing pulse, subtle chromatic fringe, and rhythmic screen shake via `TOFollowingScreenShakeEntity`.
 
@@ -24,7 +25,7 @@ Vengeful Pressure operates as a colossal domain expansion (64 to 120 blocks):
 ### Targeting
 - Affects all hostile mobs, PvP targets, and non-allied living entities within the 64-120 block radius.
 - The caster and allied entities are immune to debuffs and receive mild visual aura feedback (35% intensity).
-- Cleans up all tags and attribute modifiers immediately when a target exits the domain or when the domain is collapsed.
+- Cleans up all tags and attribute modifiers immediately when a target exits the domain, dies, changes dimensions, or when the domain is collapsed.
 
 ### Reaction States & Thresholds
 Normalized intensity `[0.0 - 1.0]`:
@@ -36,10 +37,14 @@ Normalized intensity `[0.0 - 1.0]`:
 
 ## Configuration (`SpellConfig.VengefulPressure`)
 
-- `base_mana`: 100
-- `mana_per_level`: 25
-- `cooldown_seconds`: 45.0
+- `base_mana`: 40
+- `mana_per_level`: 15
+- `cooldown_seconds`: 40.0
 - `base_radius`: 64.0
 - `radius_per_level`: 14.0
-- `global_streak_budget`: 800
-- `curtain_radius`: 48.0
+- `global_streak_budget`: 450
+
+## Visual Profile (`PressureVisualProfile.VENGEFUL_MALICE`)
+- `curtain_radius`: 48.0 (visual profile constant for wide-domain camera curtain)
+- `streak_count`: 450
+- `color`: `0x22FF55` (Intense malice green)

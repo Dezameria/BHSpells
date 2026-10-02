@@ -1,4 +1,4 @@
-﻿# Phantom Dodge (เธซเธฅเธเธซเธฅเธตเธเธ เธฒเธเธฅเธงเธเธ•เธฒ)
+# Phantom Dodge (เธซเธฅเธเธซเธฅเธตเธเธ เธฒเธเธฅเธงเธเธ•เธฒ)
 
 | Item | Value |
 | --- | --- |
@@ -12,7 +12,7 @@
 | Base dodge charges | 3 charges |
 | Charge scaling | +2 charges per level above 1 |
 | MobEffect id | `bhspells:phantom_dodge` (Beneficial) |
-| Epic Fight animations | 13 dodge variants in `biped/spells/dodge/` |
+| Epic Fight animations | 6 dodge variants in `biped/spells/dodge/` |
 | Particle VFX | Epic Fight White Afterimage (`EpicFightParticles.WHITE_AFTERIMAGE`) |
 
 ---
@@ -53,28 +53,18 @@ While the default maximum level in `DefaultConfig` is set to `1` for standard sp
 
 Each time an incoming hit is successfully evaded, the server triggers the safe facade `EpicFightCompat.triggerPhantomDodge(target)`:
 
-### 1. 13 Dodge Animation Pool
-The system randomly selects one of 13 registered animations located in `assets/bhspells/animmodels/animations/biped/spells/dodge/`:
-- **Yamato 4-Way Dodges**:
-  - `biped/spells/dodge/dmcyamato_dodge_b` (Backward)
-  - `biped/spells/dodge/dmcyamato_dodge_f` (Forward)
-  - `biped/spells/dodge/dmcyamato_dodge_l` (Left)
-  - `biped/spells/dodge/dmcyamato_dodge_r` (Right)
-- **Standard Dodges**:
-  - `biped/spells/dodge/dodge_b` (Backward roll/dodge)
-  - `biped/spells/dodge/dodge_f` (Forward roll/dodge)
-- **Murasama Dodges**:
-  - `biped/spells/dodge/hf_murasama_dodge_b` (Backward)
-  - `biped/spells/dodge/hf_murasama_dodge_f` (Forward)
-- **Stylish Evasion**:
-  - `biped/spells/dodge/perfect_dodge` (Sekiro / Perfect dodge maneuver)
+### 1. 6 Dodge Animation Pool
+The system randomly selects one of 6 registered animations located in `assets/bhspells/animmodels/animations/biped/spells/dodge/`:
+- **Dodge Master**:
+  - `biped/spells/dodge/dodgemaster_back` (Backward dodge master)
+  - `biped/spells/dodge/dodgemaster_left` (Left dodge master)
+  - `biped/spells/dodge/dodgemaster_right` (Right dodge master)
 - **Quick Steps**:
   - `biped/spells/dodge/step_b` (Backward quick step)
-  - `biped/spells/dodge/step_f` (Forward quick step)
   - `biped/spells/dodge/step_l` (Left quick step)
   - `biped/spells/dodge/step_r` (Right quick step)
 
-These clips are registered via `PhantomDodgeAnimations.registerAnimations` as `DodgeAnimation` with a 0-length invulnerability interval (`0.0F, 0.0F`), ensuring game balance and charge consumption remain the sole authority.
+These clips are registered via `PhantomDodgeAnimations.registerAnimations` as `DodgeAnimation` with standard biped dimensions (`0.6F, 1.8F`), preserving player model visibility and preventing zero-volume frustum culling.
 
 ### 2. Epic Fight White Afterimage
 - Dispatched via `AfterimageVfx.spawnWhiteAfterimage(level, entity)`.

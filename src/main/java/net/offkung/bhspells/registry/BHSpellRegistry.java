@@ -55,6 +55,7 @@ public class BHSpellRegistry {
     public static final RegistryObject<AbstractSpell> GLACIAL_VEIL = registerSpell(new GlacialVeilSpell());
     public static final RegistryObject<AbstractSpell> GLACIAL_FIRMAMENT = registerSpell(new GlacialFirmamentSpell());
     public static final RegistryObject<AbstractSpell> TOXIC_SALVATION = registerSpell(new ToxicSalvationSpell());
+    public static final RegistryObject<AbstractSpell> YIN_INK_CASCADE = registerSpell(new YinInkCascadeSpell());
 
     // GOLD
     public static final RegistryObject<AbstractSpell> SAVAGE_BITE = registerSpell(new SavageBiteSpell());

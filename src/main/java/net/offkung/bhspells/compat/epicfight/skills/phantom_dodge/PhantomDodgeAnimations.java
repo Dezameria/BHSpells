@@ -15,21 +15,14 @@ import java.util.List;
 
 /**
  * Registry and random animation selection for Phantom Dodge skill.
- * Registers all 13 dodge animations from biped/spells/dodge/.
+ * Registers 6 dodge animations from biped/spells/dodge/.
  */
 public final class PhantomDodgeAnimations {
     public static final List<String> DODGE_PATHS = List.of(
-            "biped/spells/dodge/dmcyamato_dodge_b",
-            "biped/spells/dodge/dmcyamato_dodge_f",
-            "biped/spells/dodge/dmcyamato_dodge_l",
-            "biped/spells/dodge/dmcyamato_dodge_r",
-            "biped/spells/dodge/dodge_b",
-            "biped/spells/dodge/dodge_f",
-            "biped/spells/dodge/hf_murasama_dodge_b",
-            "biped/spells/dodge/hf_murasama_dodge_f",
-            "biped/spells/dodge/perfect_dodge",
+            "biped/spells/dodge/dodgemaster_back",
+            "biped/spells/dodge/dodgemaster_left",
+            "biped/spells/dodge/dodgemaster_right",
             "biped/spells/dodge/step_b",
-            "biped/spells/dodge/step_f",
             "biped/spells/dodge/step_l",
             "biped/spells/dodge/step_r");
 
@@ -42,7 +35,7 @@ public final class PhantomDodgeAnimations {
         DODGE_ACCESSORS.clear();
         for (String path : DODGE_PATHS) {
             AnimationManager.AnimationAccessor<DodgeAnimation> accessor = builder.nextAccessor(path,
-                    acc -> new DodgeAnimation(0.0F, 0.12F, acc, 0.0F, 0.0F, Armatures.BIPED)
+                    acc -> new DodgeAnimation(0.0F, 0.12F, acc, 0.6F, 1.8F, Armatures.BIPED)
                             .addEvents(
                                     AnimationEvent.InTimeEvent.create(0.0F, (patch, anim, params) -> {
                                         LivingEntity entity = patch.getOriginal();

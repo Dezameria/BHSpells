@@ -1,0 +1,4 @@
+interface:
+  display_name: "BHSpells Development"
+  short_description: "Navigate and develop the BHSpells mod safely"
+  default_prompt: "Use $bhspells-development to inspect and implement this BHSpells change."

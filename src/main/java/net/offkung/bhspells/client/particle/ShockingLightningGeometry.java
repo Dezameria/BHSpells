@@ -76,9 +76,9 @@ public final class ShockingLightningGeometry {
         renderBranches(consumer, u0, v0, u1, v1, mainPoints, direction, right, up,
                 age, surgeProgress, globalFade, scale, visualSeed, state, reducedDetail);
 
-        // 5. Render Impact Effects (Flash, Shock Ring, Radial Arcs, Residual Arcs)
-        renderImpact(consumer, u0, v0, u1, v1, end, direction, right, up,
-                time, surgeProgress, globalFade, scale, visualSeed, state, reducedDetail);
+        // 5. Render Origin Radial Arcs & Residual Arcs (bursting at caster release point)
+        renderOriginDischargeBurst(consumer, u0, v0, u1, v1, start, direction, right, up,
+                time, globalFade, scale, visualSeed, state, reducedDetail);
     }
 
     /**
@@ -310,86 +310,63 @@ public final class ShockingLightningGeometry {
     }
 
     /**
-     * Renders the Impact VFX at the end position:
-     * White-green flash, 3D spherical radial lightning arcs, electrical explosion shock ring, and residual arcs.
+     * Renders radial lightning arcs and residual arcs bursting outward from the caster's hand origin.
+     * The bursting effect occurs upon spell release at the caster rather than at the raycast endpoint.
      */
-    private static void renderImpact(
+    private static void renderOriginDischargeBurst(
             VertexConsumer consumer, float u0, float v0, float u1, float v1,
-            Vector3f impactPos, Vector3f dir, Vector3f right, Vector3f up,
-            float time, float surgeProgress, float globalFade, float scale,
+            Vector3f origin, Vector3f dir, Vector3f right, Vector3f up,
+            float time, float globalFade, float scale,
             long seed, int state, boolean reducedDetail) {
 
-        if (surgeProgress < 0.65F) {
-            return;
-        }
+        float burstProgress = Mth.clamp(time / 4.5F, 0.0F, 1.0F);
+        float burstFade = globalFade * (1.0F - smoothstep(burstProgress));
 
-        float impactReveal = smoothstep(Mth.clamp((surgeProgress - 0.65F) / 0.35F, 0.0F, 1.0F));
-        float impactFade = globalFade * impactReveal;
-        if (impactFade <= 0.001F) {
-            return;
-        }
+        // 1. 3D Spherical Radial Lightning Arcs bursting from origin upon release
+        if (burstFade > 0.001F) {
+            int radialArcCount = reducedDetail ? 4 : 7;
+            RandomSource burstRand = RandomSource.create(seed ^ (0x8F512C41D831L + state));
+            for (int r = 0; r < radialArcCount; r++) {
+                // Uniform sampling on 3D sphere
+                float u = burstRand.nextFloat() * 2.0F - 1.0F; // cos(phi) from -1 to 1
+                float theta = burstRand.nextFloat() * TAU;
+                float sinPhi = (float) Math.sqrt(Math.max(0.0F, 1.0F - u * u));
+                Vector3f arcDir = new Vector3f(
+                        sinPhi * (float) Math.cos(theta),
+                        u,
+                        sinPhi * (float) Math.sin(theta)
+                ).normalize();
 
-        // Offset impact visual slightly back along direction to prevent z-fighting with block face
-        Vector3f impactCenter = new Vector3f(impactPos).fma(-0.04F * scale, dir);
+                // Bias forward away from caster body/camera to prevent first-person clipping
+                if (arcDir.dot(dir) < -0.15F) {
+                    arcDir.fma(-1.3F * arcDir.dot(dir), dir).normalize();
+                }
 
-        // 1. White-Green Flash Center (Crossed billboards)
-        drawCrossBillboard(consumer, u0, v0, u1, v1, impactCenter, dir, right, up,
-                0.22F * scale, WHITE_R, WHITE_G, WHITE_B, 0.95F * impactFade);
-        drawCrossBillboard(consumer, u0, v0, u1, v1, impactCenter, dir, right, up,
-                0.40F * scale, EMERALD_R, EMERALD_G, EMERALD_B, 0.70F * impactFade);
+                float arcLength = (0.40F + burstRand.nextFloat() * 0.70F) * scale;
+                Vector3f p1 = new Vector3f(origin);
+                Vector3f pMid = new Vector3f(origin).fma(arcLength * 0.5F, arcDir)
+                        .fma((burstRand.nextFloat() - 0.5F) * 0.20F * scale, right);
+                Vector3f p2 = new Vector3f(origin).fma(arcLength, arcDir);
 
-        // 2. Shock Ring expanding on impact plane
-        float ringProgress = Mth.clamp((time - 2.5F) / 4.0F, 0.0F, 1.0F);
-        if (ringProgress > 0.0F) {
-            float ringRadius = (0.20F + ringProgress * 0.95F) * scale;
-            float ringAlpha = (1.0F - smoothstep(ringProgress)) * impactFade;
-            drawRing(consumer, u0, v0, u1, v1, impactCenter, right, up,
-                    ringRadius, 0.012F * scale, CYAN_R, CYAN_G, CYAN_B, 0.78F * ringAlpha, 16);
-        }
-
-        // 3. 3D Spherical Radial Lightning Arcs bursting from impact point
-        int radialArcCount = reducedDetail ? 4 : 7;
-        RandomSource impactRand = RandomSource.create(seed ^ (0x8F512C41D831L + state));
-        for (int r = 0; r < radialArcCount; r++) {
-            // Uniform sampling on 3D sphere
-            float u = impactRand.nextFloat() * 2.0F - 1.0F; // cos(phi) from -1 to 1
-            float theta = impactRand.nextFloat() * TAU;
-            float sinPhi = (float) Math.sqrt(Math.max(0.0F, 1.0F - u * u));
-            Vector3f arcDir = new Vector3f(
-                    sinPhi * (float) Math.cos(theta),
-                    u,
-                    sinPhi * (float) Math.sin(theta)
-            ).normalize();
-
-            // If pointing back into wall, reflect forward into world
-            if (arcDir.dot(dir) < -0.2F) {
-                arcDir.fma(-1.3F * arcDir.dot(dir), dir).normalize();
+                float arcAlpha = 0.85F * burstFade;
+                drawTube(consumer, u0, v0, u1, v1, p1, pMid, 0.015F * scale, WHITE_R, WHITE_G, WHITE_B, arcAlpha);
+                drawTube(consumer, u0, v0, u1, v1, pMid, p2, 0.011F * scale, EMERALD_R, EMERALD_G, EMERALD_B, arcAlpha);
             }
-
-            float arcLength = (0.35F + impactRand.nextFloat() * 0.65F) * scale;
-            Vector3f p1 = new Vector3f(impactCenter);
-            Vector3f pMid = new Vector3f(impactCenter).fma(arcLength * 0.5F, arcDir)
-                    .fma((impactRand.nextFloat() - 0.5F) * 0.18F * scale, right);
-            Vector3f p2 = new Vector3f(impactCenter).fma(arcLength, arcDir);
-
-            float arcAlpha = 0.80F * impactFade;
-            drawTube(consumer, u0, v0, u1, v1, p1, pMid, 0.014F * scale, WHITE_R, WHITE_G, WHITE_B, arcAlpha);
-            drawTube(consumer, u0, v0, u1, v1, pMid, p2, 0.010F * scale, EMERALD_R, EMERALD_G, EMERALD_B, arcAlpha);
         }
 
-        // 4. Residual Arcs: twitching short arcs near impact in later ticks (time >= 4.0F)
-        if (time >= 4.0F) {
-            float residualFade = globalFade * (1.0F - smoothstep(Mth.clamp((time - 4.0F) / 6.0F, 0.0F, 1.0F)));
+        // 2. Residual Arcs: twitching short arcs near origin in later ticks (time >= 2.0F)
+        if (time >= 2.0F) {
+            float residualFade = globalFade * (1.0F - smoothstep(Mth.clamp((time - 2.0F) / 6.0F, 0.0F, 1.0F)));
             int resCount = reducedDetail ? 2 : 3;
             for (int res = 0; res < resCount; res++) {
                 float resAngle = (seed + res * 137L + state * 47L) % 100 / 100.0F * TAU;
-                Vector3f resP1 = new Vector3f(impactCenter)
-                        .fma(Mth.cos(resAngle) * 0.15F * scale, right)
-                        .fma(Mth.sin(resAngle) * 0.15F * scale, up);
-                Vector3f resP2 = new Vector3f(impactCenter)
-                        .fma(Mth.cos(resAngle + 1.1F) * 0.35F * scale, right)
-                        .fma(Mth.sin(resAngle + 1.1F) * 0.35F * scale, up)
-                        .fma((res % 2 == 0 ? 0.15F : -0.15F) * scale, dir);
+                Vector3f resP1 = new Vector3f(origin)
+                        .fma(Mth.cos(resAngle) * 0.16F * scale, right)
+                        .fma(Mth.sin(resAngle) * 0.16F * scale, up);
+                Vector3f resP2 = new Vector3f(origin)
+                        .fma(Mth.cos(resAngle + 1.1F) * 0.36F * scale, right)
+                        .fma(Mth.sin(resAngle + 1.1F) * 0.36F * scale, up)
+                        .fma((res % 2 == 0 ? 0.22F : 0.06F) * scale, dir);
                 drawTube(consumer, u0, v0, u1, v1, resP1, resP2, 0.009F * scale,
                         LIME_R, LIME_G, LIME_B, 0.85F * residualFade);
             }

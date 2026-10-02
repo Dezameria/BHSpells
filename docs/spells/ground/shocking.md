@@ -40,10 +40,12 @@
 
 - **Emerald Arc Discharge (`shocking_beam`):**
   - **แนวคิด (Concept):** *"Emerald Arc Discharge / Unstable Magical Electricity"* พลังไฟฟ้าเวทมนตร์สีเขียวมรกตที่ดูรุนแรง อลังการ และไม่เสถียร มีลักษณะการดิ้นและกระตุกในอากาศ ไม่ใช่เลเซอร์เส้นตรง
-  - **จุดกำเนิดพลัง (Hand Energy Core):**
+  - **จุดกำเนิดพลังและการคายประจุระเบิดออก (Discharge Burst at Hand Origin):**
     - แกนพลังงาน 3 ชั้น: แกนกลางขาวบริสุทธิ์ (`White Hot Core`), วงขอบสีเขียวอมเหลือง (`Lime Rim`) และเรืองแสงรอบนอกสีเขียวมรกต (`Emerald Outer Glow`)
     - มีสายฟ้าเล็กวิ่งวน (`Swirling Arcs`) และวงแหวนพลังงานโปร่งใส 2-3 ชั้นรอบจุดกำเนิดที่มีรอยแยก การสั่นไหว และแตกเป็นส่วนๆ (`Fragmented / Distorted Shock Rings`) เสมือนสนามแม่เหล็กกำลังเสียเสถียรภาพ
     - เมื่อปล่อยพลังเกิดแสงวาบ (`Muzzle Flash`) สั้นๆ และคลื่นกระแทกวงแหวน (`Muzzle Shock Ring`) ขยายตัวออกอย่างรวดเร็ว
+    - **สายฟ้าแตกแขนงระเบิดออก (Radial Lightning Arcs):** สายฟ้า 3D Spherical Radial Arcs แตกแขนงพุ่งระเบิดออกจากมือผู้ร่ายทันทีที่ปล่อยพลัง (เบี่ยงทิศทางไปข้างหน้าเพื่อไม่ให้บดบังมุมมองบุคคลที่หนึ่ง)
+    - **สะเก็ดไฟและสายฟ้าตกค้าง (Origin Spark Burst & Residual Arcs):** กลุ่มสะเก็ดไฟประจุไฟฟ้าสีเขียว/Cyan ระเบิดออกจากมือผู้ร่าย พร้อมสายฟ้าสั้นๆ ดิ้นกระตุกค้างอยู่รอบมือในจังหวะคายประจุก่อนจางหายไป
   - **สายฟ้าหลัก (Main Jagged Arc):**
     - วิถีสายฟ้าซิกแซกในพื้นที่ 3 มิติ (3D Jagged Displacement) มีการหนา-บางไม่เท่ากันตามแนววิถี
     - โครงสร้าง 3 Layer Coincident Tubes:
@@ -61,11 +63,9 @@
   - **ความปั่นป่วนทางไฟฟ้า (Electrical Chaos):**
     - สร้างสะเก็ดไฟ (`Electric Spark`) และละอองไอพลาสมาไฟฟ้า (`Electric Dust`) สีเขียวมรกตและ Cyan ในจังหวะ `tick()` เพื่อรักษาต้นทุนเฟรมเรตให้คงที่
     - ประกายไฟฟ้าถูกแรงผลักดีดออกทางด้านข้างรอบแกนสายฟ้า
-  - **จุดกระทบเป้าหมาย (Impact Visuals):**
-    - *White-Green Flash:* แสงสว่างจ้าสีขาวอมเขียว ณ จุดปะทะแบบ Crossed Billboards มองเห็นได้ทุกมุมกล้อง
-    - *Radial Lightning:* สายฟ้า 3D Spherical Arcs แตกแขนงพุ่งออกรอบทิศทางในทรงกลม 3 มิติอย่างสมบูรณ์
-    - *Expanding Shock Ring:* วงแหวนสี Cyan/Emerald ขยายตัวออกอย่างรวดเร็วบนระนาบการปะทะ
-    - *Residual Arcs:* สายฟ้าเล็กๆ ดิ้นกระตุกค้างอยู่บริเวณจุดกระทบก่อนจางหายไปในช่วงท้าย (Residual Fade)
+  - **ปลายวิถีลำแสง (Beam Termination at Endpoint):**
+    - ลำแสงและแนววิถีดาเมจจะหยุดสิ้นสุดอย่างคมชัดที่บล็อกทึบแรกที่ขวางกั้นหรือที่ระยะสูงสุด 8 บล็อก
+    - **ไม่มีสายฟ้าแตกแขนงที่ปลายลำแสง (No Endpoint Impact Burst):** นำเอฟเฟกต์ระเบิดสายฟ้าแตกแขนงที่ปลายลำแสง/จุดกระทบบล็อกออกทั้งหมด เพื่อความสะอาดตาและความคมชัดของวิถีพลังงาน โดยรวมการระเบิดสายฟ้าไว้ที่จุดเริ่มต้นตรงผู้ร่ายเพียงจุดเดียว
 - **สถานะไฟฟ้าช็อตเป้าหมาย (Target Shock Effect):**
   - แสดงผลฝั่ง Client เท่านั้นผ่าน `ShockingEffectClientEvents` บน Entity ที่ติดสถานะ `bhspells:shocking`
   - เกิดขึ้นเป็นระลอก (`Periodic Pulses` รอบละ 24 ticks โดยทำงาน 7 ticks และหยุดพัก 17 ticks) เพื่อไม่ให้รกสายตาตลอดเวลา
@@ -91,7 +91,7 @@
 - ตรวจสอบการลงทะเบียน ID `bhspells:shocking` ในสายเวท Ground และ Particle `shocking_beam`
 - ตรวจสอบความถูกต้องของ Hitbox 3 มิติ (ความกว้าง 1.8, ความสูง 1.8, ความยาว 8 บล็อก)
 - ตรวจสอบการส่ง Seed ผ่าน Packet `ShockingBeamParticleOption` เฉพาะผู้เล่นในระยะ 64 บล็อก
-- ตรวจสอบ Hand Energy Core, Main Arc 3 เลเยอร์, Branching Arcs (2-5 ticks window), Pulse Travel, Impact Shock Ring/3D Spherical Radial Arcs และ Residual Arcs
+- ตรวจสอบ Hand Energy Core, Main Arc 3 เลเยอร์, Branching Arcs (2-5 ticks window), Pulse Travel, Origin Radial Arcs & Residual Arcs ที่จุดปล่อยพลัง และการสิ้นสุดของลำแสงที่บล็อกโดยไม่มีสายฟ้าแตกที่ปลายลำแสง
 - ตรวจสอบ Target Shock Effect บนเอนทิตีที่ติดสถานะ `ShockingEffect` ว่ามีสายฟ้า Crossed Ribbons กระตุกข้ามจุด Anchor, มีเสียง Pop และหายไปเมื่อสถานะหมด
 - ตรวจสอบระบบ Distance Culling (>48 บล็อก) และ LOD Reduction (>24 บล็อก)
 - ตรวจสอบการไม่แครชบน Dedicated Server และไม่มี Blend/Depth-Mask รั่วไหลสู่การเรนเดอร์น้ำหรือ Particle อื่น

@@ -41,6 +41,8 @@ public class PacketHandler {
         INSTANCE.messageBuilder(SyncTigershadeTargetPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT).encoder(SyncTigershadeTargetPacket::encode).decoder(SyncTigershadeTargetPacket::decode).consumerNetworkThread(SyncTigershadeTargetPacket::handle).add();
         INSTANCE.messageBuilder(ExplodeJadeClusterPacket.class, index++, NetworkDirection.PLAY_TO_SERVER).encoder(ExplodeJadeClusterPacket::encode).decoder(ExplodeJadeClusterPacket::new).consumerNetworkThread(ExplodeJadeClusterPacket::handle).add();
         INSTANCE.messageBuilder(DingAfterImageParticlePacket.class, index++, NetworkDirection.PLAY_TO_CLIENT).encoder(DingAfterImageParticlePacket::encode).decoder(DingAfterImageParticlePacket::decode).consumerNetworkThread(DingAfterImageParticlePacket::handle).add();
+        INSTANCE.messageBuilder(net.offkung.bhspells.network.server.StopHymnEffekPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT).encoder(net.offkung.bhspells.network.server.StopHymnEffekPacket::encode).decoder(net.offkung.bhspells.network.server.StopHymnEffekPacket::new).consumerNetworkThread(net.offkung.bhspells.network.server.StopHymnEffekPacket::handle).add();
+        INSTANCE.messageBuilder(net.offkung.bhspells.network.server.StopYinInkEffekPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT).encoder(net.offkung.bhspells.network.server.StopYinInkEffekPacket::encode).decoder(net.offkung.bhspells.network.server.StopYinInkEffekPacket::new).consumerNetworkThread(net.offkung.bhspells.network.server.StopYinInkEffekPacket::handle).add();
     }
 
     public static void syncTigerShadeTarget(ServerPlayer player, @Nullable UUID targetUuid) {
@@ -48,6 +50,12 @@ public class PacketHandler {
     }
     public static void spawnDingAfterImage(LivingEntity target) {
         INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> target), new DingAfterImageParticlePacket(target.getId()));
+    }
+    public static void sendStopHymnEffek(LivingEntity caster) {
+        INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> caster), new net.offkung.bhspells.network.server.StopHymnEffekPacket(caster.getId()));
+    }
+    public static void sendStopYinInkEffek(LivingEntity caster) {
+        INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> caster), new net.offkung.bhspells.network.server.StopYinInkEffekPacket(caster.getId()));
     }
 
 }

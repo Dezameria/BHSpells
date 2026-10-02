@@ -2,6 +2,9 @@ package net.offkung.bhspells.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.offkung.bhspells.spells.evocation.DingShenFaSpell;
+import net.offkung.bhspells.spells.evocation.SpiritualPressureSpell;
+import net.offkung.bhspells.spells.evocation.VengefulPressureSpell;
+import net.offkung.bhspells.spells.lightning.TempestReiatsuSpell;
 import net.offkung.bhspells.spells.gold.SavageBiteSpell;
 import net.offkung.bhspells.spells.ground.EarthRoarSpell;
 import net.offkung.bhspells.spells.ground.ShockingSpell;
@@ -10,6 +13,7 @@ import net.offkung.bhspells.spells.aqua.CrimsonRainBathesMoonSpell;
 import net.offkung.bhspells.spells.aqua.GlacialFirmamentSpell;
 import net.offkung.bhspells.spells.aqua.GlacialVeilSpell;
 import net.offkung.bhspells.spells.aqua.ToxicSalvationSpell;
+import net.offkung.bhspells.spells.aqua.YinInkCascadeSpell;
 import net.offkung.bhspells.spells.fire.*;
 import net.offkung.bhspells.spells.gold.GildedHareSpell;
 import net.offkung.bhspells.spells.gold.HymnofPurificationSpell;
@@ -699,6 +703,34 @@ public class SpellConfig {
         }
     }
 
+    public static class YinInkCascade {
+        public static ForgeConfigSpec.DoubleValue baseDamage;
+        public static ForgeConfigSpec.DoubleValue damagePerLevel;
+        public static ForgeConfigSpec.IntValue baseMana;
+        public static ForgeConfigSpec.IntValue manaPerLevel;
+        public static ForgeConfigSpec.DoubleValue cooldown;
+
+        public static float getBaseDamage() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseDamage.get().floatValue() : YinInkCascadeSpell.BASE_DAMAGE;
+        }
+
+        public static float getDamagePerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? damagePerLevel.get().floatValue() : YinInkCascadeSpell.DAMAGE_PER_LEVEL;
+        }
+
+        public static int getBaseMana() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : YinInkCascadeSpell.BASE_MANA_COST;
+        }
+
+        public static int getManaPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? manaPerLevel.get() : YinInkCascadeSpell.MANA_COST_PER_LEVEL;
+        }
+
+        public static double getCooldown() {
+            return (SPEC != null && SPEC.isLoaded()) ? cooldown.get() : YinInkCascadeSpell.COOLDOWN_SECONDS;
+        }
+    }
+
     // ==========================================
     // EVOCATION SCHOOL
     // ==========================================
@@ -894,7 +926,7 @@ public class SpellConfig {
         public static ForgeConfigSpec.IntValue globalStreakBudget;
 
         public static int getBaseMana() {
-            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : 75;
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : VengefulPressureSpell.BASE_MANA_COST;
         }
 
         public static int getManaPerLevel() {
@@ -906,15 +938,15 @@ public class SpellConfig {
         }
 
         public static float getBaseRadius() {
-            return (SPEC != null && SPEC.isLoaded()) ? baseRadius.get().floatValue() : 16.0F;
+            return (SPEC != null && SPEC.isLoaded()) ? baseRadius.get().floatValue() : VengefulPressureSpell.BASE_RADIUS;
         }
 
         public static float getRadiusPerLevel() {
-            return (SPEC != null && SPEC.isLoaded()) ? radiusPerLevel.get().floatValue() : 2.0F;
+            return (SPEC != null && SPEC.isLoaded()) ? radiusPerLevel.get().floatValue() : VengefulPressureSpell.RADIUS_PER_LEVEL;
         }
 
         public static int getGlobalStreakBudget() {
-            return (SPEC != null && SPEC.isLoaded()) ? globalStreakBudget.get() : 120;
+            return (SPEC != null && SPEC.isLoaded()) ? globalStreakBudget.get() : 450;
         }
     }
 
@@ -931,7 +963,7 @@ public class SpellConfig {
         public static ForgeConfigSpec.IntValue globalStreakBudget;
 
         public static int getBaseMana() {
-            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : 120;
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : TempestReiatsuSpell.BASE_MANA_COST;
         }
 
         public static int getManaPerLevel() {
@@ -967,7 +999,7 @@ public class SpellConfig {
         }
 
         public static int getGlobalStreakBudget() {
-            return (SPEC != null && SPEC.isLoaded()) ? globalStreakBudget.get() : 240;
+            return (SPEC != null && SPEC.isLoaded()) ? globalStreakBudget.get() : 480;
         }
     }
 
@@ -1161,6 +1193,14 @@ public class SpellConfig {
         GlacialFirmament.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 25.0D, 0.0D, 3600.0D);
         BUILDER.pop();
 
+        BUILDER.push("yin_ink_cascade");
+        YinInkCascade.baseDamage = BUILDER.comment("Explosion burst base damage at Level 1").defineInRange("base_damage", 25.0D, 0.0D, 10000.0D);
+        YinInkCascade.damagePerLevel = BUILDER.comment("Damage increase per level").defineInRange("damage_per_level", 5.0D, 0.0D, 1000.0D);
+        YinInkCascade.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 80, 0, 10000);
+        YinInkCascade.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 10, 0, 1000);
+        YinInkCascade.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 60.0D, 0.0D, 3600.0D);
+        BUILDER.pop();
+
         BUILDER.push("ding_shen_fa");
         DingShenFa.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 120, 0, 10000);
         DingShenFa.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 20, 0, 1000);
@@ -1203,16 +1243,16 @@ public class SpellConfig {
         BUILDER.pop();
 
         BUILDER.push("vengeful_pressure");
-        VengefulPressure.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 75, 0, 10000);
+        VengefulPressure.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 40, 0, 10000);
         VengefulPressure.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 15, 0, 1000);
         VengefulPressure.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 40.0D, 0.0D, 3600.0D);
-        VengefulPressure.baseRadius = BUILDER.comment("Base radius in blocks").defineInRange("base_radius", 16.0D, 1.0D, 128.0D);
-        VengefulPressure.radiusPerLevel = BUILDER.comment("Radius increase per level").defineInRange("radius_per_level", 2.0D, 0.0D, 32.0D);
-        VengefulPressure.globalStreakBudget = BUILDER.comment("Global streak budget").defineInRange("global_streak_budget", 120, 0, 1000);
+        VengefulPressure.baseRadius = BUILDER.comment("Base radius in blocks").defineInRange("base_radius", 64.0D, 1.0D, 256.0D);
+        VengefulPressure.radiusPerLevel = BUILDER.comment("Radius increase per level").defineInRange("radius_per_level", 14.0D, 0.0D, 64.0D);
+        VengefulPressure.globalStreakBudget = BUILDER.comment("Global streak budget").defineInRange("global_streak_budget", 450, 0, 2000);
         BUILDER.pop();
 
         BUILDER.push("tempest_reiatsu");
-        TempestReiatsu.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 120, 0, 10000);
+        TempestReiatsu.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 50, 0, 10000);
         TempestReiatsu.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 30, 0, 1000);
         TempestReiatsu.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 60.0D, 0.0D, 3600.0D);
         TempestReiatsu.baseDamage = BUILDER.comment("Base strike damage").defineInRange("base_damage", 10.0D, 0.0D, 10000.0D);
@@ -1221,7 +1261,7 @@ public class SpellConfig {
         TempestReiatsu.radiusPerLevel = BUILDER.comment("Radius increase per level").defineInRange("radius_per_level", 14.0D, 0.0D, 64.0D);
         TempestReiatsu.strikeIntervalMin = BUILDER.comment("Min ticks between strikes").defineInRange("strike_interval_min", 10, 1, 200);
         TempestReiatsu.strikeIntervalMax = BUILDER.comment("Max ticks between strikes").defineInRange("strike_interval_max", 30, 1, 400);
-        TempestReiatsu.globalStreakBudget = BUILDER.comment("Global streak budget").defineInRange("global_streak_budget", 240, 0, 2000);
+        TempestReiatsu.globalStreakBudget = BUILDER.comment("Global streak budget").defineInRange("global_streak_budget", 480, 0, 2000);
         BUILDER.pop();
 
         // EVOCATION - PHANTOM DODGE

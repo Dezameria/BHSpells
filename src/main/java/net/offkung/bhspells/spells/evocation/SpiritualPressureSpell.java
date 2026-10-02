@@ -37,8 +37,8 @@ public class SpiritualPressureSpell extends AbstractSpell {
 
     public static final int BASE_MANA_COST = 75;
     public static final int MANA_COST_PER_LEVEL = 15;
-    public static final double COOLDOWN_SECONDS = 40.0;
-    public static final float BASE_RADIUS = 16.0F;
+    public static final double COOLDOWN_SECONDS = 35.0;
+    public static final float BASE_RADIUS = 12.0F;
     public static final float RADIUS_PER_LEVEL = 2.0F;
     public static final int DURATION_TICKS = 300;
 
@@ -98,19 +98,28 @@ public class SpiritualPressureSpell extends AbstractSpell {
     }
 
     @Override
+    public CastResult canBeCastedBy(int spellLevel, CastSource castSource, MagicData playerMagicData, Player player) {
+        if (net.offkung.bhspells.pressure.PressureToggleHelper.isDomainActive(player, spellId.toString())) {
+            return new CastResult(CastResult.Type.SUCCESS);
+        }
+        return super.canBeCastedBy(spellLevel, castSource, playerMagicData, player);
+    }
+
+    @Override
     public boolean checkPreCastConditions(Level level, int spellLevel, LivingEntity entity, MagicData playerMagicData) {
         // Shift + Cast cancels an active pressure field owned by this caster
-        if (entity.isShiftKeyDown()) {
+
             if (!level.isClientSide && ServerPressureManager.hasActiveField(entity.getUUID(), spellId.toString())) {
                 ServerPressureManager.stopByOwnerAndSpell(entity.getUUID(), spellId.toString());
                 if (entity instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                     serverPlayer.displayClientMessage(Component.translatable("ui.bhspells.spiritual_pressure_cancelled"), true);
-                    playerMagicData.getPlayerCooldowns().addCooldown(this, 20);
+                    int cdTicks = (int) (SpellConfig.SpiritualPressure.getCooldown() * 20);
+                    playerMagicData.getPlayerCooldowns().addCooldown(this, cdTicks);
                     playerMagicData.getPlayerCooldowns().syncToPlayer(serverPlayer);
                 }
                 return false;
             }
-        }
+
         return super.checkPreCastConditions(level, spellLevel, entity, playerMagicData);
     }
 

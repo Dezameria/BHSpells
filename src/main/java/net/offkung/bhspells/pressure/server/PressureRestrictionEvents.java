@@ -47,6 +47,9 @@ public final class PressureRestrictionEvents {
         LivingEntity entity = event.getEntity();
         if (entity != null) {
             ServerPressureManager.stopAllByOwner(entity.getUUID());
+            if (entity.level() instanceof ServerLevel serverLevel) {
+                ServerPressureManager.releaseEntity(serverLevel, entity.getUUID());
+            }
         }
     }
 
@@ -61,6 +64,9 @@ public final class PressureRestrictionEvents {
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             ServerPressureManager.onPlayerLoggedOut(player);
+            if (player.level() instanceof ServerLevel serverLevel) {
+                ServerPressureManager.releaseEntity(serverLevel, player.getUUID());
+            }
         }
     }
 
@@ -68,7 +74,21 @@ public final class PressureRestrictionEvents {
     public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             ServerPressureManager.stopAllByOwner(player.getUUID());
+            if (player.getServer() != null) {
+                ServerLevel fromLevel = player.getServer().getLevel(event.getFrom());
+                if (fromLevel != null) {
+                    ServerPressureManager.releaseEntity(fromLevel, player.getUUID());
+                }
+            }
+            if (player.level() instanceof ServerLevel toLevel) {
+                ServerPressureManager.releaseEntity(toLevel, player.getUUID());
+            }
             ServerPressureManager.syncToPlayer(player);
         }
+    }
+
+    @SubscribeEvent
+    public static void onServerStopping(net.minecraftforge.event.server.ServerStoppingEvent event) {
+        ServerPressureManager.clearAll();
     }
 }

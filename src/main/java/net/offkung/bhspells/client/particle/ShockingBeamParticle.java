@@ -174,8 +174,8 @@ public class ShockingBeamParticle extends TextureSheetParticle {
                     vel.x, vel.y, vel.z);
         }
 
-        // 3. Impact Spark Burst
-        if (this.age >= 2 && this.age <= 5) {
+        // 3. Origin Spark Burst (Burst of sparks at discharge point during initial ticks)
+        if (this.age >= 1 && this.age <= 4) {
             for (int i = 0; i < 3; i++) {
                 double theta = rand.nextDouble() * Math.PI * 2.0;
                 double phi = (rand.nextDouble() - 0.5) * Math.PI;
@@ -185,8 +185,12 @@ public class ShockingBeamParticle extends TextureSheetParticle {
                         Math.sin(phi) * speed,
                         Math.cos(phi) * Math.sin(theta) * speed
                 );
+                // Bias forward along cast direction away from player
+                if (vel.dot(normDir) < -0.02D) {
+                    vel = vel.add(normDir.scale(-1.2D * vel.dot(normDir)));
+                }
                 this.level.addParticle(i % 2 == 0 ? ParticleTypes.ELECTRIC_SPARK : GREEN_ELECTRIC_DUST,
-                        this.destination.x, this.destination.y, this.destination.z,
+                        this.origin.x, this.origin.y, this.origin.z,
                         vel.x, vel.y, vel.z);
             }
         }

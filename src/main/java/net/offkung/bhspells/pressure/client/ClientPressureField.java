@@ -50,7 +50,7 @@ public class ClientPressureField {
             float phaseOffset = random.nextFloat();
             float baseAlpha = data.visualProfile().baseAlpha() * (0.65F + random.nextFloat() * 0.35F);
 
-            // 3D Volumetric Tiers (ทั่วฟ้าดิน / ครอบคลุมทั่วอาณาเขต):
+            // 3D Volumetric Tiers (เธ—เธฑเนเธงเธเนเธฒเธ”เธดเธ / เธเธฃเธญเธเธเธฅเธธเธกเธ—เธฑเนเธงเธญเธฒเธ“เธฒเน€เธเธ•):
             int tierRoll = i % 10;
             float width;
             float length;
@@ -107,6 +107,8 @@ public class ClientPressureField {
     public void markEnding() {
         this.isEnding = true;
     }
+
+    public boolean isEnding() { return isEnding; }
 
     public boolean isFinished() {
         return isEnding && endingTicks >= FADE_OUT_TICKS;

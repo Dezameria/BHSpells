@@ -77,11 +77,12 @@ public final class PressureFieldRenderer {
         List<ClientPressureField> sortedFields = new ArrayList<>(fields);
         sortedFields.sort(Comparator.comparingDouble(f -> f.getInterpolatedCenter(partialTicks).distanceToSqr(camPos)));
 
-        int remainingBudget = Math.max(
+        int configBudget = Math.max(
                 SpellConfig.SpiritualPressure.getGlobalStreakBudget(),
                 Math.max(SpellConfig.VengefulPressure.getGlobalStreakBudget(), SpellConfig.TempestReiatsu.getGlobalStreakBudget())
         );
         int fieldCount = Math.min(sortedFields.size(), MAX_RENDERED_FIELDS);
+        int remainingBudget = Math.max(16, configBudget);
 
         VertexConsumer builder = bufferSource.getBuffer(PRESSURE_STREAK_RENDER_TYPE);
         Matrix4f matrix = poseStack.last().pose();
@@ -122,7 +123,10 @@ public final class PressureFieldRenderer {
             int b = FastColor.ARGB32.blue(color);
 
             List<PressureStreak> streaks = field.getStreaks();
-            int streaksToRender = Math.min(streaks.size() / lodStep, remainingBudget);
+            int fieldsLeft = fieldCount - fIdx;
+            int fieldShare = Math.min(remainingBudget, Math.max(16, remainingBudget / fieldsLeft));
+            int fieldLimit = Math.min(field.getData().visualProfile().streakCount(), fieldShare);
+            int streaksToRender = Math.min(streaks.size() / lodStep, fieldLimit);
 
             // World-snapped origin for camera curtain mode gives 360-degree deluge around player without jitter
             Vec3 streakOrigin = (isCurtain && insideField)
@@ -131,7 +135,7 @@ public final class PressureFieldRenderer {
 
             double[] yRange = new double[2];
 
-            for (int sIdx = 0; sIdx < streaks.size() && streaksToRender > 0; sIdx += lodStep) {
+            for (int sIdx = 0; sIdx < streaks.size() && streaksToRender > 0 && remainingBudget > 0; sIdx += lodStep) {
                 PressureStreak streak = streaks.get(sIdx);
                 double worldX = streakOrigin.x + streak.getOffsetX();
                 double worldZ = streakOrigin.z + streak.getOffsetZ();
@@ -177,9 +181,13 @@ public final class PressureFieldRenderer {
                 builder.vertex(matrix, relX, relY1, relZ + halfW).color(r, g, b, a).uv(1.0F, v0).uv2(light).endVertex();
                 builder.vertex(matrix, relX, relY1, relZ - halfW).color(r, g, b, a).uv(0.0F, v0).uv2(light).endVertex();
 
-                remainingBudget--;
+                // budget tracked per field
                 streaksToRender--;
+                remainingBudget--;
             }
+        }
+        if (bufferSource instanceof MultiBufferSource.BufferSource batches) {
+            batches.endBatch(PRESSURE_STREAK_RENDER_TYPE);
         }
     }
 }

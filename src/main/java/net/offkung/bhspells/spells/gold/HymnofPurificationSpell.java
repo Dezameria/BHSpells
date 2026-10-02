@@ -5,8 +5,11 @@ import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.spells.*;
 import io.redspace.ironsspellbooks.api.util.AnimationHolder;
 import io.redspace.ironsspellbooks.api.util.Utils;
-import io.redspace.ironsspellbooks.capabilities.magic.MagicManager;
 import io.redspace.ironsspellbooks.damage.DamageSources;
+import io.redspace.ironsspellbooks.entity.spells.target_area.TargetedAreaEntity;
+import mod.chloeprime.aaaparticles.api.common.AAALevel;
+import mod.chloeprime.aaaparticles.api.common.ParticleEmitterInfo;
+import mod.chloeprime.aaaparticles.common.util.LimitlessResourceLocation;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -17,14 +20,18 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.offkung.bhspells.BHSpells;
 import net.offkung.bhspells.config.SpellConfig;
+import net.offkung.bhspells.network.PacketHandler;
 import net.offkung.bhspells.registry.BHSchoolRegistry;
 import net.offkung.bhspells.registry.MobEffectsRegistry;
+import net.offkung.bhspells.util.BHUtil;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,9 +47,13 @@ public class HymnofPurificationSpell extends AbstractSpell {
     public static final double COOLDOWN_SECONDS = 60.0D;
 
     public static final float RADIUS = 20.0F;
-    public static final int DURATION_TICKS = 400;
+    public static final int DURATION_TICKS = 460;
+    public static final int SOUND_DELAY_TICKS = 40;
     public static final int HEAL_INTERVAL_TICKS = 20;
     public static final int NAUSEA_DURATION_TICKS = 40;
+
+    public static final String AREA_ENTITY_ID = "HymnAreaEntityId";
+    public static final ResourceLocation SHIBA_COMMISSION_EFFEK_ID = new LimitlessResourceLocation(BHSpells.MODID, "vfx/Shiba_Commission");
 
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
@@ -113,12 +124,6 @@ public class HymnofPurificationSpell extends AbstractSpell {
         return AnimationHolder.none();
     }
 
-    public static float getHealAmount(int spellLevel, LivingEntity caster) {
-        float base = SpellConfig.HymnofPurification.getBaseHeal();
-        float perLevel = SpellConfig.HymnofPurification.getHealPerLevel();
-        return base + (spellLevel - 1) * perLevel;
-    }
-
     @Override
     public boolean checkPreCastConditions(Level level, int spellLevel, LivingEntity entity, MagicData magicData) {
         if (entity.hasEffect(MobEffectsRegistry.HYMN_OF_PURIFICATION.get())) {
@@ -130,7 +135,25 @@ public class HymnofPurificationSpell extends AbstractSpell {
     @Override
     public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource, MagicData playerMagicData) {
         entity.addEffect(new MobEffectInstance(MobEffectsRegistry.HYMN_OF_PURIFICATION.get(), DURATION_TICKS, spellLevel - 1, false, false, true));
+
+        if (!level.isClientSide) {
+            TargetedAreaEntity visualArea = TargetedAreaEntity.createTargetAreaEntity(level, entity.position(), RADIUS, 0xFFD700, entity);
+            visualArea.setDuration(DURATION_TICKS);
+            entity.getPersistentData().putInt(AREA_ENTITY_ID, visualArea.getId());
+
+            ResourceLocation emitterName = getEmitterName(entity);
+            ParticleEmitterInfo effek = ParticleEmitterInfo.create(level, SHIBA_COMMISSION_EFFEK_ID, emitterName)
+                    .position(entity.getX(), entity.getY() + 0.05D, entity.getZ());
+            AAALevel.addParticle(level, 64.0, effek);
+        }
+
         super.onCast(level, spellLevel, entity, castSource, playerMagicData);
+    }
+
+    public static float getHealAmount(int spellLevel, LivingEntity caster) {
+        float base = SpellConfig.HymnofPurification.getBaseHeal();
+        float perLevel = SpellConfig.HymnofPurification.getHealPerLevel();
+        return base + (spellLevel - 1) * perLevel;
     }
 
     public static boolean isAlly(LivingEntity caster, LivingEntity target) {
@@ -144,31 +167,44 @@ public class HymnofPurificationSpell extends AbstractSpell {
         return false;
     }
 
-    public static void spawnChannelingParticles(Level level, LivingEntity caster, int elapsedTicks) {
-        if (!(level instanceof ServerLevel serverLevel)) {
-            return;
+    public static ResourceLocation getEmitterName(int entityId) {
+        return BHSpells.id("hymn_shiba_" + entityId);
+    }
+
+    public static ResourceLocation getEmitterName(LivingEntity caster) {
+        return getEmitterName(caster.getId());
+    }
+
+    public static void stopEffek(LivingEntity entity) {
+        if (!entity.level().isClientSide) {
+            PacketHandler.sendStopHymnEffek(entity);
         }
+    }
 
-        if (elapsedTicks % 4 == 0) {
-            double angle = (elapsedTicks * 0.25D) % (Math.PI * 2.0D);
-            double ringRadius = 1.5D + (elapsedTicks % 60) * 0.1D;
-            double px = caster.getX() + Math.cos(angle) * ringRadius;
-            double pz = caster.getZ() + Math.sin(angle) * ringRadius;
-            double py = caster.getY() + 0.3D + caster.getRandom().nextDouble() * 1.2D;
-
-            MagicManager.spawnParticles(serverLevel, ParticleTypes.NOTE, px, py, pz, 1, 0.0D, 0.0D, 0.0D, (elapsedTicks % 24) / 24.0D, false);
-            MagicManager.spawnParticles(serverLevel, ParticleTypes.WAX_OFF, px, py, pz, 1, 0.01D, 0.02D, 0.01D, 0.02D, false);
-        }
-
-        if (elapsedTicks % 20 == 0) {
-            int points = 16;
-            for (int i = 0; i < points; i++) {
-                double rad = (Math.PI * 2.0D / points) * i;
-                double rx = caster.getX() + Math.cos(rad) * 3.0D;
-                double rz = caster.getZ() + Math.sin(rad) * 3.0D;
-                MagicManager.spawnParticles(serverLevel, ParticleTypes.GLOW, rx, caster.getY() + 0.1D, rz, 1, 0.0D, 0.01D, 0.0D, 0.01D, false);
+    public static void cleanUpArea(LivingEntity entity) {
+        if (entity.getPersistentData().contains(AREA_ENTITY_ID)) {
+            int areaId = entity.getPersistentData().getInt(AREA_ENTITY_ID);
+            entity.getPersistentData().remove(AREA_ENTITY_ID);
+            if (entity.level() instanceof ServerLevel serverLevel) {
+                Entity area = serverLevel.getEntity(areaId);
+                if (area instanceof TargetedAreaEntity targetedArea) {
+                    targetedArea.discard();
+                }
             }
         }
+    }
+
+    public static void cleanUpVisuals(LivingEntity entity) {
+        stopEffek(entity);
+        cleanUpArea(entity);
+    }
+
+    public static void spawnInterruptionSmoke(ServerLevel level, Vec3 center) {
+        Vec3 ringPos = center.add(0, 0.2D, 0);
+        BHUtil.createHorizontalRingParticles(level, ringPos, ParticleTypes.POOF, 0.8D, 0.25D, 0.5D, 36);
+        BHUtil.createHorizontalRingParticles(level, ringPos, ParticleTypes.POOF, 1.8D, 0.35D, 0.7D, 48);
+        BHUtil.createHorizontalRingParticles(level, ringPos, ParticleTypes.CAMPFIRE_COSY_SMOKE, 1.0D, 0.15D, 0.35D, 28);
+        BHUtil.createSphereParticles(level, center.add(0, 0.6D, 0), ParticleTypes.SMOKE, 0.5D, 0.1D, 0.3D, 24);
     }
 
     public static void performDebuffCleanse(Level level, LivingEntity caster) {
@@ -184,11 +220,6 @@ public class HymnofPurificationSpell extends AbstractSpell {
 
             for (var effect : harmfulEffects) {
                 ally.removeEffect(effect);
-            }
-
-            if (level instanceof ServerLevel serverLevel) {
-                MagicManager.spawnParticles(serverLevel, ParticleTypes.END_ROD, ally.getX(), ally.getY() + ally.getBbHeight() * 0.5D, ally.getZ(), 12, 0.4D, 0.6D, 0.4D, 0.08D, false);
-                MagicManager.spawnParticles(serverLevel, ParticleTypes.FLASH, ally.getX(), ally.getY() + ally.getBbHeight() * 0.5D, ally.getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D, false);
             }
         }
 

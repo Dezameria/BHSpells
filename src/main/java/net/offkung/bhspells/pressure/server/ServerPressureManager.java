@@ -1,6 +1,6 @@
 package net.offkung.bhspells.pressure.server;
 
-import net.offkung.bhspells.compat.epicfight.pressure.PressureEpicFightCompat;
+import net.offkung.bhspells.pressure.PressureReactionDispatcher;
 import net.offkung.bhspells.config.SpellConfig;
 import net.offkung.bhspells.pressure.PressureFieldData;
 import net.offkung.bhspells.pressure.PressureReaction;
@@ -44,6 +44,14 @@ public final class ServerPressureManager {
     private static final Map<ResourceKey<Level>, Set<UUID>> DIMENSION_VENGEFUL_ENTITIES = new ConcurrentHashMap<>();
     private static final Set<UUID> ROOTED_ENTITIES = ConcurrentHashMap.newKeySet();
 
+    public static void clearAll() {
+        ACTIVE_FIELDS.clear();
+        FIELD_VIEWERS.clear();
+        DIMENSION_ENTITY_REACTIONS.clear();
+        DIMENSION_VENGEFUL_ENTITIES.clear();
+        ROOTED_ENTITIES.clear();
+    }
+
     private ServerPressureManager() {
     }
 
@@ -51,11 +59,50 @@ public final class ServerPressureManager {
         return ROOTED_ENTITIES.contains(entity.getUUID()) || entity.getTags().contains(TAG_ROOTED);
     }
 
+    public static void releaseEntity(ServerLevel level, UUID targetId) {
+        if (targetId == null) {
+            return;
+        }
+        ROOTED_ENTITIES.remove(targetId);
+        if (level != null) {
+            ResourceKey<Level> dimKey = level.dimension();
+            Map<UUID, PressureReaction> dimReactions = DIMENSION_ENTITY_REACTIONS.get(dimKey);
+            PressureReaction oldReaction = (dimReactions != null) ? dimReactions.remove(targetId) : null;
+
+            Set<UUID> vengeful = DIMENSION_VENGEFUL_ENTITIES.get(dimKey);
+            if (vengeful != null) {
+                vengeful.remove(targetId);
+            }
+
+            Entity entity = level.getEntity(targetId);
+            if (entity instanceof LivingEntity living) {
+                living.removeTag(TAG_ROOTED);
+                removeVengefulModifiers(living);
+                PressureNetwork.broadcastReaction(living, PressureReaction.NONE);
+                PressureReactionDispatcher.dispatch(living, oldReaction != null ? oldReaction : PressureReaction.NONE, PressureReaction.NONE);
+            }
+        }
+    }
+
     public static UUID startField(ServerLevel level, PressureFieldData data) {
         ServerPressureField field = new ServerPressureField(data, level);
         ACTIVE_FIELDS.put(data.fieldId(), field);
-        FIELD_VIEWERS.put(data.fieldId(), Collections.newSetFromMap(new ConcurrentHashMap<>()));
+        Set<UUID> viewers = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        Vec3 center = field.getCurrentCenter();
+        double radius = data.radius();
+        double viewDistSq = (radius + 96.0D) * (radius + 96.0D);
+        for (ServerPlayer player : level.players()) {
+            if (player.distanceToSqr(center) <= viewDistSq) {
+                viewers.add(player.getUUID());
+            }
+        }
+        FIELD_VIEWERS.put(data.fieldId(), viewers);
         PressureNetwork.broadcastStartField(field);
+        if (level.getPlayerByUUID(data.ownerUuid()) instanceof ServerPlayer serverPlayer) {
+            if (viewers.add(serverPlayer.getUUID())) {
+                PressureNetwork.sendStartFieldToPlayer(serverPlayer, data);
+            }
+        }
 
         // Initial screen shake burst
         Entity owner = field.getOwnerEntity();
@@ -80,14 +127,23 @@ public final class ServerPressureManager {
                 }
             }
             PressureNetwork.broadcastEndField(field.getLevel(), fieldId, field.getCurrentCenter(), field.getData().radius());
-            cleanupLevelReactions(field.getLevel());
+            boolean hasRemainingInDimension = false;
+            for (ServerPressureField f : ACTIVE_FIELDS.values()) {
+                if (f.getLevel() == field.getLevel()) {
+                    hasRemainingInDimension = true;
+                    break;
+                }
+            }
+            if (!hasRemainingInDimension) {
+                cleanupLevelReactions(field.getLevel());
+            }
         }
     }
 
     public static void stopByOwnerAndSpell(UUID ownerUuid, String sourceSpellId) {
         List<UUID> toStop = new ArrayList<>();
         for (ServerPressureField field : ACTIVE_FIELDS.values()) {
-            if (field.getOwnerUuid().equals(ownerUuid) && field.getSourceSpellId().equals(sourceSpellId)) {
+            if (field.getOwnerUuid().equals(ownerUuid) && spellIdMatches(field.getSourceSpellId(), sourceSpellId)) {
                 toStop.add(field.getFieldId());
             }
         }
@@ -119,7 +175,7 @@ public final class ServerPressureManager {
 
     public static boolean hasActiveField(UUID ownerUuid, String sourceSpellId) {
         for (ServerPressureField field : ACTIVE_FIELDS.values()) {
-            if (field.getOwnerUuid().equals(ownerUuid) && field.getSourceSpellId().equals(sourceSpellId) && !field.isExpired()) {
+            if (field.getOwnerUuid().equals(ownerUuid) && spellIdMatches(field.getSourceSpellId(), sourceSpellId) && !field.isExpired()) {
                 return true;
             }
         }
@@ -128,8 +184,14 @@ public final class ServerPressureManager {
 
     public static void syncToPlayer(ServerPlayer player) {
         for (ServerPressureField field : ACTIVE_FIELDS.values()) {
-            if (field.getLevel().dimension().equals(player.level().dimension())) {
-                PressureNetwork.sendStartFieldToPlayer(player, field.getData());
+            if (field.getLevel().dimension().equals(player.level().dimension()) && !field.isExpired()) {
+                double viewDistSq = (field.getData().radius() + 96.0D) * (field.getData().radius() + 96.0D);
+                if (player.distanceToSqr(field.getCurrentCenter()) <= viewDistSq) {
+                    Set<UUID> viewers = FIELD_VIEWERS.computeIfAbsent(field.getFieldId(), k -> Collections.newSetFromMap(new ConcurrentHashMap<>()));
+                    if (viewers.add(player.getUUID())) {
+                        PressureNetwork.sendStartFieldToPlayer(player, field.getData());
+                    }
+                }
             }
         }
     }
@@ -184,6 +246,7 @@ public final class ServerPressureManager {
 
         Map<UUID, Float> strongestIntensityMap = new HashMap<>();
         Map<UUID, LivingEntity> affectedEntities = new HashMap<>();
+        Map<UUID, String> strongestSpellMap = new HashMap<>();
         Set<UUID> currentVengefulTargets = new HashSet<>();
 
         for (ServerPressureField field : ACTIVE_FIELDS.values()) {
@@ -242,8 +305,8 @@ public final class ServerPressureManager {
                 return true;
             });
 
-            boolean isTempest = field.getSourceSpellId().equals("bhspells:tempest_reiatsu");
-            boolean isVengeful = field.getSourceSpellId().equals("bhspells:vengeful_pressure");
+            boolean isTempest = field.getSourceSpellId().endsWith("tempest_reiatsu");
+            boolean isVengeful = field.getSourceSpellId().endsWith("vengeful_pressure");
 
             List<LivingEntity> validTargetsInsideRadius = new ArrayList<>();
 
@@ -261,14 +324,11 @@ public final class ServerPressureManager {
                 float fieldIntensity = field.getData().intensity() * distanceFactor;
 
                 UUID targetId = target.getUUID();
-                float currentMax = strongestIntensityMap.getOrDefault(targetId, 0.0F);
-                if (fieldIntensity > currentMax) {
+                float currentIntensity = strongestIntensityMap.getOrDefault(targetId, 0.0F);
+                if (fieldIntensity > currentIntensity) {
                     strongestIntensityMap.put(targetId, fieldIntensity);
                     affectedEntities.put(targetId, target);
-                }
-
-                if (isVengeful) {
-                    currentVengefulTargets.add(targetId);
+                    strongestSpellMap.put(targetId, field.getSourceSpellId());
                 }
             }
 
@@ -281,7 +341,7 @@ public final class ServerPressureManager {
 
                 // Strike stun reaction
                 PressureNetwork.broadcastReaction(strikeTarget, PressureReaction.KNEEL);
-                PressureEpicFightCompat.onReactionChange(strikeTarget, PressureReaction.KNEEL);
+                PressureReactionDispatcher.dispatch(strikeTarget, dimReactions.getOrDefault(strikeTarget.getUUID(), PressureReaction.NONE), PressureReaction.KNEEL);
 
                 PressureNetwork.broadcastLightningStrike(level, strikeTarget.position(), 0xFF1493, radius);
                 level.playSound(null, strikeTarget.getX(), strikeTarget.getY(), strikeTarget.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.WEATHER, 1.0F, 1.2F);
@@ -307,7 +367,7 @@ public final class ServerPressureManager {
             if (newReaction != oldReaction) {
                 dimReactions.put(targetId, newReaction);
                 PressureNetwork.broadcastReaction(target, newReaction);
-                PressureEpicFightCompat.onReactionChange(target, newReaction);
+                PressureReactionDispatcher.dispatch(target, oldReaction, newReaction);
             }
 
             int amplifier = switch (newReaction) {
@@ -343,8 +403,10 @@ public final class ServerPressureManager {
                 target.removeTag(TAG_ROOTED);
             }
 
-            // Vengeful Pressure specific debuffs
-            if (currentVengefulTargets.contains(targetId)) {
+            // Vengeful Pressure specific debuffs (only applied if the dominant field is Vengeful)
+            String winningSpellId = strongestSpellMap.getOrDefault(targetId, "");
+            if (winningSpellId.endsWith("vengeful_pressure")) {
+                currentVengefulTargets.add(targetId);
                 vengefulEntities.add(targetId);
                 target.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 30, 0, false, false, false));
                 target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 30, 1, false, false, false));
@@ -372,13 +434,13 @@ public final class ServerPressureManager {
             Map.Entry<UUID, PressureReaction> entry = iter.next();
             UUID targetId = entry.getKey();
             if (!strongestIntensityMap.containsKey(targetId)) {
+                ROOTED_ENTITIES.remove(targetId);
                 Entity entity = level.getEntity(targetId);
                 if (entity instanceof LivingEntity living) {
-                    ROOTED_ENTITIES.remove(targetId);
                     living.removeTag(TAG_ROOTED);
                     removeVengefulModifiers(living);
                     PressureNetwork.broadcastReaction(living, PressureReaction.NONE);
-                    PressureEpicFightCompat.onReactionChange(living, PressureReaction.NONE);
+                    PressureReactionDispatcher.dispatch(living, entry.getValue(), PressureReaction.NONE);
                 }
                 iter.remove();
             }
@@ -433,21 +495,22 @@ public final class ServerPressureManager {
 
     private static void cleanupLevelReactions(ServerLevel level) {
         ResourceKey<Level> dimKey = level.dimension();
-        Map<UUID, PressureReaction> dimReactions = DIMENSION_ENTITY_REACTIONS.get(dimKey);
+        Map<UUID, PressureReaction> dimReactions = DIMENSION_ENTITY_REACTIONS.remove(dimKey);
         if (dimReactions != null) {
             for (UUID targetId : dimReactions.keySet()) {
+                ROOTED_ENTITIES.remove(targetId);
                 Entity entity = level.getEntity(targetId);
                 if (entity instanceof LivingEntity living) {
                     living.removeTag(TAG_ROOTED);
                     removeVengefulModifiers(living);
                     PressureNetwork.broadcastReaction(living, PressureReaction.NONE);
-                    PressureEpicFightCompat.onReactionChange(living, PressureReaction.NONE);
+                    PressureReactionDispatcher.dispatch(living, dimReactions.getOrDefault(targetId, PressureReaction.NONE), PressureReaction.NONE);
                 }
             }
             dimReactions.clear();
         }
 
-        Set<UUID> vEntities = DIMENSION_VENGEFUL_ENTITIES.get(dimKey);
+        Set<UUID> vEntities = DIMENSION_VENGEFUL_ENTITIES.remove(dimKey);
         if (vEntities != null) {
             for (UUID targetId : vEntities) {
                 Entity entity = level.getEntity(targetId);
@@ -457,5 +520,13 @@ public final class ServerPressureManager {
             }
             vEntities.clear();
         }
+    }
+
+    public static boolean spellIdMatches(String a, String b) {
+        if (a == null || b == null) return false;
+        if (a.equals(b)) return true;
+        String pureA = a.contains(":") ? a.substring(a.indexOf(':') + 1) : a;
+        String pureB = b.contains(":") ? b.substring(b.indexOf(':') + 1) : b;
+        return pureA.equals(pureB);
     }
 }

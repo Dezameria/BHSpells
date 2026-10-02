@@ -1,12 +1,9 @@
 package net.offkung.bhspells.effect;
 
-import io.redspace.ironsspellbooks.capabilities.magic.MagicManager;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -29,8 +26,6 @@ public class HymnofPurificationEffect extends MobEffect {
     public static final String START_X = "HymnStartX";
     public static final String START_Y = "HymnStartY";
     public static final String START_Z = "HymnStartZ";
-    public static final String START_YAW = "HymnStartYaw";
-    public static final String START_PITCH = "HymnStartPitch";
     public static final String INTERRUPTED = "HymnInterrupted";
     public static final String TICKS_ACTIVE = "HymnTicksActive";
 
@@ -44,8 +39,6 @@ public class HymnofPurificationEffect extends MobEffect {
         entity.getPersistentData().putDouble(START_X, entity.getX());
         entity.getPersistentData().putDouble(START_Y, entity.getY());
         entity.getPersistentData().putDouble(START_Z, entity.getZ());
-        entity.getPersistentData().putFloat(START_YAW, entity.getYRot());
-        entity.getPersistentData().putFloat(START_PITCH, entity.getXRot());
         entity.getPersistentData().putBoolean(INTERRUPTED, false);
         entity.getPersistentData().putInt(TICKS_ACTIVE, 0);
     }
@@ -77,13 +70,6 @@ public class HymnofPurificationEffect extends MobEffect {
             return;
         }
 
-        float yawDiff = Math.abs(Mth.wrapDegrees(entity.getYRot() - entity.getPersistentData().getFloat(START_YAW)));
-        float pitchDiff = Math.abs(Mth.wrapDegrees(entity.getXRot() - entity.getPersistentData().getFloat(START_PITCH)));
-        if (yawDiff > 3.0F || pitchDiff > 3.0F) {
-            interrupt(entity);
-            return;
-        }
-
         List<LivingEntity> colliding = level.getEntitiesOfClass(LivingEntity.class, entity.getBoundingBox(), e -> e != entity && !e.isSpectator() && !e.isPassengerOfSameVehicle(entity) && e.isPickable());
         if (!colliding.isEmpty()) {
             interrupt(entity);
@@ -99,13 +85,8 @@ public class HymnofPurificationEffect extends MobEffect {
 
             for (LivingEntity ally : allies) {
                 ally.heal(healAmount);
-                if (level instanceof ServerLevel serverLevel) {
-                    MagicManager.spawnParticles(serverLevel, ParticleTypes.HEART, ally.getX(), ally.getY() + ally.getBbHeight() * 0.7D, ally.getZ(), 1, 0.2D, 0.2D, 0.2D, 0.02D, false);
-                }
             }
         }
-
-        HymnofPurificationSpell.spawnChannelingParticles(level, entity, ticks);
     }
 
     @Override
@@ -121,6 +102,7 @@ public class HymnofPurificationEffect extends MobEffect {
 
         if (!interrupted && ticks >= HymnofPurificationSpell.DURATION_TICKS - 5) {
             HymnofPurificationSpell.performDebuffCleanse(level, entity);
+            HymnofPurificationSpell.cleanUpArea(entity);
         } else if (!interrupted) {
             interrupt(entity);
         }
@@ -134,9 +116,15 @@ public class HymnofPurificationEffect extends MobEffect {
 
         Level level = entity.level();
 
+        HymnofPurificationSpell.cleanUpVisuals(entity);
+
         level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 1.5F, 0.5F);
         level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.NOTE_BLOCK_DIDGERIDOO.value(), SoundSource.PLAYERS, 1.2F, 0.6F);
         level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 1.0F, 0.8F);
+
+        if (level instanceof ServerLevel serverLevel) {
+            HymnofPurificationSpell.spawnInterruptionSmoke(serverLevel, entity.position());
+        }
 
         float radiusSqr = HymnofPurificationSpell.RADIUS * HymnofPurificationSpell.RADIUS;
         List<LivingEntity> allies = level.getEntitiesOfClass(LivingEntity.class, entity.getBoundingBox().inflate(HymnofPurificationSpell.RADIUS), target -> HymnofPurificationSpell.isAlly(entity, target) && entity.distanceToSqr(target) <= radiusSqr);

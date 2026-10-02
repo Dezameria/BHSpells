@@ -19,6 +19,7 @@ public final class CompatBootstrap {
         if (CompatMods.isEpicFightLoaded()) {
             try {
                 EpicFightCompat.registerModEvents(modEventBus);
+                net.offkung.bhspells.compat.epicfight.pressure.PressureEpicFightCompat.register();
                 BHSpells.LOGGER.info("Epic Fight compatibility initialized successfully.");
             } catch (Throwable t) {
                 BHSpells.LOGGER.error("Failed to initialize Epic Fight compatibility", t);

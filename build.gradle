@@ -208,6 +208,7 @@ dependencies {
     implementation fg.deobf("maven.modrinth:h7YaLrkk:XgFoh4Su")
 
     implementation fg.deobf("maven.modrinth:NfYqagMx:XC2kXPPd")
+    implementation fg.deobf("curse.maven:free-cam-557076:4643128")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }

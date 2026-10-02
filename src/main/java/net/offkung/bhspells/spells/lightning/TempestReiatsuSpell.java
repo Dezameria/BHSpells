@@ -42,7 +42,7 @@ public class TempestReiatsuSpell extends AbstractSpell {
     // ==========================================
     // 2. CONSTANTS (Tuning & Code Defaults)
     // ==========================================
-    public static final int BASE_MANA_COST = 120;
+    public static final int BASE_MANA_COST = 50;
     public static final int MANA_COST_PER_LEVEL = 30;
     public static final double COOLDOWN_SECONDS = 60.0;
     public static final float BASE_RADIUS = 64.0F;

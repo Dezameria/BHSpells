@@ -59,6 +59,9 @@ public final class IronSpellAnimations {
         CUE_MAP.put(AnimationCue.EARTH_ROAR_CHARGE, Animations.BIPED_KNEEL);
         CUE_MAP.put(AnimationCue.EARTH_ROAR_DASH, Animations.BIPED_SNEAK);
         CUE_MAP.put(AnimationCue.EARTH_ROAR_KICK, Animations.BIPED_STEP_FORWARD);
+        CUE_MAP.put(AnimationCue.PRESSURE_STAGGER, Animations.BIPED_HIT_SHORT);
+        CUE_MAP.put(AnimationCue.PRESSURE_KNEEL, Animations.BIPED_KNEEL);
+        CUE_MAP.put(AnimationCue.PRESSURE_KNOCKDOWN, Animations.BIPED_KNOCKDOWN);
     }
 
     public static AssetAccessor<? extends StaticAnimation> getAnimationForCue(AnimationCue cue) {

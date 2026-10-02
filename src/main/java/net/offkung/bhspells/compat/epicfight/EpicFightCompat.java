@@ -128,4 +128,18 @@ public final class EpicFightCompat {
             return false;
         }
     }
+
+    public static boolean applyGuardBreak(LivingEntity entity) {
+        if (!isAvailable() || entity == null) {
+            return false;
+        }
+
+        try {
+            return EpicFightLoadedBridge.applyGuardBreak(entity);
+        } catch (LinkageError error) {
+            linkageFailed = true;
+            BHSpells.LOGGER.error("Epic Fight apply guard break failed due to linkage error", error);
+            return false;
+        }
+    }
 }

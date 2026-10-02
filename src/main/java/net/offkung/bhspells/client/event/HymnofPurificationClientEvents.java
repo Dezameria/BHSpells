@@ -1,10 +1,14 @@
 package net.offkung.bhspells.client.event;
 
+import mod.chloeprime.aaaparticles.api.client.EffectHolder;
+import mod.chloeprime.aaaparticles.api.client.EffectRegistry;
+import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
@@ -15,21 +19,40 @@ import net.minecraftforge.fml.common.Mod;
 import net.offkung.bhspells.BHSpells;
 import net.offkung.bhspells.registry.BHSoundRegistry;
 import net.offkung.bhspells.registry.MobEffectsRegistry;
+import net.offkung.bhspells.spells.gold.HymnofPurificationSpell;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = BHSpells.MODID, value = Dist.CLIENT)
 public class HymnofPurificationClientEvents {
     private static final Map<UUID, HymnSoundInstance> ACTIVE_SOUNDS = new HashMap<>();
+    private static final Map<UUID, Integer> PERFORMER_TICKS = new HashMap<>();
 
     private HymnofPurificationClientEvents() {
     }
 
     public static boolean isPerforming(Player player) {
         return player != null && player.hasEffect(MobEffectsRegistry.HYMN_OF_PURIFICATION.get());
+    }
+
+    public static void stopClientEffek(int entityId) {
+        ResourceLocation emitterName = HymnofPurificationSpell.getEmitterName(entityId);
+        Optional.ofNullable(EffectRegistry.get(HymnofPurificationSpell.SHIBA_COMMISSION_EFFEK_ID))
+                .flatMap(EffectHolder::lazyGet)
+                .flatMap(mng -> mng.getNamedEmitter(ParticleEmitter.Type.WORLD, emitterName))
+                .ifPresent(emitter -> emitter.stop());
+    }
+
+    public static void stopClientEffek(Player player) {
+        if (player != null) {
+            stopClientEffek(player.getId());
+        }
     }
 
     @SubscribeEvent
@@ -47,37 +70,59 @@ public class HymnofPurificationClientEvents {
 
         for (AbstractClientPlayer player : level.players()) {
             if (isPerforming(player)) {
-                if (!ACTIVE_SOUNDS.containsKey(player.getUUID())) {
+                UUID playerId = player.getUUID();
+                int ticks = PERFORMER_TICKS.getOrDefault(playerId, 0) + 1;
+                var effect = player.getEffect(MobEffectsRegistry.HYMN_OF_PURIFICATION.get());
+                if (effect != null) {
+                    int elapsed = HymnofPurificationSpell.DURATION_TICKS - effect.getDuration();
+                    if (elapsed > ticks) {
+                        ticks = elapsed;
+                    }
+                }
+                PERFORMER_TICKS.put(playerId, ticks);
+
+                if (ticks >= HymnofPurificationSpell.SOUND_DELAY_TICKS && !ACTIVE_SOUNDS.containsKey(playerId)) {
                     HymnSoundInstance sound = new HymnSoundInstance(player, BHSoundRegistry.HYMN_OF_PURIFICATION.get());
-                    ACTIVE_SOUNDS.put(player.getUUID(), sound);
+                    ACTIVE_SOUNDS.put(playerId, sound);
                     minecraft.getSoundManager().play(sound);
                 }
             }
         }
 
-        Iterator<Map.Entry<UUID, HymnSoundInstance>> iterator = ACTIVE_SOUNDS.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<UUID, HymnSoundInstance> entry = iterator.next();
+        Iterator<Map.Entry<UUID, Integer>> performerIterator = PERFORMER_TICKS.entrySet().iterator();
+        while (performerIterator.hasNext()) {
+            Map.Entry<UUID, Integer> entry = performerIterator.next();
             UUID playerId = entry.getKey();
-            HymnSoundInstance sound = entry.getValue();
-
             Player player = level.getPlayerByUUID(playerId);
-            if (player == null || player.isRemoved() || !isPerforming(player) || sound.isStopped()) {
-                sound.stopPlaying();
-                minecraft.getSoundManager().stop(sound);
-                iterator.remove();
+            if (player == null || player.isRemoved() || !isPerforming(player)) {
+                performerIterator.remove();
+                HymnSoundInstance sound = ACTIVE_SOUNDS.remove(playerId);
+                if (sound != null) {
+                    sound.stopPlaying();
+                    minecraft.getSoundManager().stop(sound);
+                }
+            }
+        }
+
+        Iterator<Map.Entry<UUID, HymnSoundInstance>> soundIterator = ACTIVE_SOUNDS.entrySet().iterator();
+        while (soundIterator.hasNext()) {
+            Map.Entry<UUID, HymnSoundInstance> entry = soundIterator.next();
+            HymnSoundInstance sound = entry.getValue();
+            if (sound.isStopped()) {
+                soundIterator.remove();
             }
         }
     }
 
     public static void stopAllSounds(Minecraft minecraft) {
-        for (HymnSoundInstance sound : ACTIVE_SOUNDS.values()) {
-            sound.stopPlaying();
+        for (Map.Entry<UUID, HymnSoundInstance> entry : ACTIVE_SOUNDS.entrySet()) {
+            entry.getValue().stopPlaying();
             if (minecraft != null && minecraft.getSoundManager() != null) {
-                minecraft.getSoundManager().stop(sound);
+                minecraft.getSoundManager().stop(entry.getValue());
             }
         }
         ACTIVE_SOUNDS.clear();
+        PERFORMER_TICKS.clear();
         if (minecraft != null && minecraft.getSoundManager() != null) {
             minecraft.getSoundManager().stop(BHSoundRegistry.HYMN_OF_PURIFICATION.get().getLocation(), SoundSource.PLAYERS);
         }

@@ -1,4 +1,4 @@
-﻿# Per-spell documentation
+# Per-spell documentation
 
 This directory is the required source of detailed design and implementation notes for spells in BHSpells (BeeHouse Spells). The index covers all **63 registered spells across 7 magic schools**.
 
@@ -9,6 +9,10 @@ This directory is the required source of detailed design and implementation note
 - Name the file after the spell registry path using lowercase snake case: `<school>/<spell_id>.md`.
 - Example: `bhspells:wings_of_tempest` is documented in `nature/wings_of_tempest.md`.
 - Do not put detailed specifications for multiple spells in the same file.
+
+> [!NOTE]
+> **Five Elements Martial Spells (45 สกิลสายยุทธภพห้าธาตุ):**
+> รายละเอียดการออกแบบ ระบบกลศาสตร์กลาง (Combat Standards), การส่งเสริม/กดข่ม (Promotions & Counters), และสเปกของสกิลห้าธาตุทั้งหมด 45 ท่า ถูกจัดระเบียบไว้อย่างละเอียดใน [docs/Elemental Spells/](file:///d:/Minecraft/Dev/ironspell_more/BHSpells/docs/Elemental%20Spells/README.md) โดยแยกเป็น 5 หมวดธาตุตามบทบาท (Damage, Tank, Support) เพื่อการค้นหาที่สะดวกและเป็นระบบ
 
 ## Spell index
 
@@ -58,6 +62,7 @@ This directory is the required source of detailed design and implementation note
 - [Glacial Veil](aqua/glacial_veil.md) โ€” เธซเธขเธดเธ เธเธตเธซเธขเธฒเธ (Ying Xiyang)
 - [Hazard Area](aqua/hazard_area.md)
 - [Star Ice](aqua/star_ice.md)
+- [Yin Ink Cascade](aqua/yin_ink_cascade.md) — สุ่ว เยว่ชิง (Shui Yueqing)
 - [Toxic Salvation](aqua/toxic_salvation.md) โ€” เธเธเธซเธฅเธดเธ (Song Lin)
 
 ### ๐ช Gold (15 Spells)

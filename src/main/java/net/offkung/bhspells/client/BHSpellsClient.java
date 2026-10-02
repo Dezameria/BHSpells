@@ -148,6 +148,7 @@ public class BHSpellsClient {
         event.registerEntityRenderer(EntityRegistry.CRIMSON_ROOT.get(), CrimsonRootRenderer::new);
         event.registerEntityRenderer(EntityRegistry.TOXIC_SALVATION_AOE.get(), NoopRenderer::new);
         event.registerEntityRenderer(EntityRegistry.JADE_CLUSTER.get(), JadeClusterEntityRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.YIN_INK_CASCADE_AREA.get(), NoopRenderer::new);
     }
 
     @SubscribeEvent

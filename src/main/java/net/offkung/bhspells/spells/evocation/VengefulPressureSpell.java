@@ -36,9 +36,9 @@ public class VengefulPressureSpell extends AbstractSpell {
     public static final String SPELL_ID_STR = "bhspells:vengeful_pressure";
     private final ResourceLocation spellId = new ResourceLocation(BHSpells.MODID, "vengeful_pressure");
 
-    public static final int BASE_MANA_COST = 100;
-    public static final int MANA_COST_PER_LEVEL = 25;
-    public static final double COOLDOWN_SECONDS = 45.0;
+    public static final int BASE_MANA_COST = 40;
+    public static final int MANA_COST_PER_LEVEL = 15;
+    public static final double COOLDOWN_SECONDS = 40.0;
     public static final float BASE_RADIUS = 64.0F;
     public static final float RADIUS_PER_LEVEL = 14.0F;
 

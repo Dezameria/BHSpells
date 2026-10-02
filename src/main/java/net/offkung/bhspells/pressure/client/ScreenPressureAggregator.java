@@ -90,7 +90,14 @@ public final class ScreenPressureAggregator {
             secondaryStrength = secondary.strength;
             // Angular interference between sources
             double dot = primary.dirToCenter.dot(secondary.dirToCenter);
-            interference = (float) (1.0 - Math.abs(dot)) * Math.min(primaryStrength, secondaryStrength);
+            boolean coLocated = dot > 0.95 || Math.abs(dot - 1.0) < 0.05;
+            if (coLocated) {
+                // When two colossal domains originate from the same caster, they create intense harmonic clash!
+                float gameTime = (mc.level.getGameTime() + partialTicks) / 20.0F;
+                interference = 0.75F * Math.min(primaryStrength, secondaryStrength) * (0.8F + 0.2F * Mth.sin(gameTime * 4.0F));
+            } else {
+                interference = (float) (1.0 - Math.abs(dot)) * Math.min(primaryStrength, secondaryStrength);
+            }
         }
 
         float totalPressure = Mth.clamp(primaryStrength + secondaryStrength * 0.4F, 0.0F, 1.0F);
@@ -103,6 +110,12 @@ public final class ScreenPressureAggregator {
 
         float dirX = (float) primary.dirToCenter.dot(left);
         float dirY = (float) primary.dirToCenter.dot(up);
+
+        if (secondary != null && Math.abs(dirX) < 0.01F && Math.abs(dirY) < 0.01F) {
+            // Harmonic dual aura split: one school pushes slightly to the left, the other to the right!
+            float gameTime = (mc.level.getGameTime() + partialTicks) / 20.0F;
+            dirX = 0.55F * Mth.sin(gameTime * 2.5F);
+        }
 
         currentState = new ScreenPressureState(
                 totalPressure,

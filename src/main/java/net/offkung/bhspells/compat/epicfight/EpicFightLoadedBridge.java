@@ -92,4 +92,25 @@ public final class EpicFightLoadedBridge {
         net.offkung.bhspells.compat.epicfight.common.particle.AfterimageVfx.spawnWhiteAfterimage(entity.level(), entity);
         return true;
     }
+
+    public static boolean applyGuardBreak(LivingEntity entity) {
+        if (entity == null) {
+            return false;
+        }
+        try {
+            yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch<?> patch =
+                    yesman.epicfight.world.capabilities.EpicFightCapabilities.getEntityPatch(entity, yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch.class);
+            if (patch != null) {
+                if (patch instanceof yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch<?> playerPatch) {
+                    playerPatch.setStamina(0.0F);
+                }
+                if (patch.getAnimator() != null) {
+                    patch.playAnimationSynchronized(yesman.epicfight.gameasset.Animations.BIPED_KNOCKDOWN, 0.1F);
+                }
+                return true;
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
 }

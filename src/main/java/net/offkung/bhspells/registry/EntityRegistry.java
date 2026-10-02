@@ -55,6 +55,7 @@ import net.offkung.bhspells.entity.spells.thousand_arrows.*;
 import net.offkung.bhspells.entity.spells.toxic_salvation.ToxicSalvationAoe;
 import net.offkung.bhspells.entity.spells.venomous_blossomfall.AzureVenomNeedleEntity;
 import net.offkung.bhspells.entity.spells.wings_of_tempest.WingofTempestAoe;
+import net.offkung.bhspells.entity.spells.yin_ink_cascade.YinInkCascadeAreaEntity;
 
 public class EntityRegistry {
     private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(Registries.ENTITY_TYPE, BHSpells.MODID);
@@ -383,4 +384,10 @@ public class EntityRegistry {
                     .sized(1.0F, 3.2F)
                     .clientTrackingRange(64)
                     .build(ResourceLocation.fromNamespaceAndPath(BHSpells.MODID, "jade_cluster").toString()));
+
+    public static final RegistryObject<EntityType<YinInkCascadeAreaEntity>> YIN_INK_CASCADE_AREA =
+            ENTITIES.register("yin_ink_cascade_area", () -> EntityType.Builder.<YinInkCascadeAreaEntity>of(YinInkCascadeAreaEntity::new, MobCategory.MISC)
+                    .sized(4.0f, 1.0f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(BHSpells.MODID, "yin_ink_cascade_area").toString()));
 }

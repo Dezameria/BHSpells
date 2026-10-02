@@ -18,7 +18,10 @@ public final class ClientPressureManager {
     }
 
     public static void addOrUpdateField(PressureFieldData data) {
-        ACTIVE_FIELDS.put(data.fieldId(), new ClientPressureField(data));
+        ClientPressureField existing = ACTIVE_FIELDS.get(data.fieldId());
+        if (existing == null || existing.isEnding()) {
+            ACTIVE_FIELDS.put(data.fieldId(), new ClientPressureField(data));
+        }
     }
 
     public static void removeField(UUID fieldId) {
@@ -64,7 +67,7 @@ public final class ClientPressureManager {
 
     public static boolean hasActiveFieldByOwnerAndSpell(UUID ownerUuid, String sourceSpellId) {
         for (ClientPressureField field : ACTIVE_FIELDS.values()) {
-            if (field.getData().ownerUuid().equals(ownerUuid) && field.getData().sourceSpellId().equals(sourceSpellId) && !field.isFinished()) {
+            if (field.getData().ownerUuid().equals(ownerUuid) && spellIdMatches(field.getData().sourceSpellId(), sourceSpellId) && !field.isEnding()) {
                 return true;
             }
         }
@@ -113,5 +116,13 @@ public final class ClientPressureManager {
 
     public static void clearAll() {
         clear();
+    }
+
+    public static boolean spellIdMatches(String a, String b) {
+        if (a == null || b == null) return false;
+        if (a.equals(b)) return true;
+        String pureA = a.contains(":") ? a.substring(a.indexOf(':') + 1) : a;
+        String pureB = b.contains(":") ? b.substring(b.indexOf(':') + 1) : b;
+        return pureA.equals(pureB);
     }
 }
